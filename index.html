@@ -347,6 +347,8 @@ h1{
  background:white;
  padding:20px;
  border-radius:8px;
+ max-height:80vh;
+ overflow-y:auto;
 }
 
 input,textarea{
@@ -589,6 +591,11 @@ function toggleFlagIssue(lineIndex, issueIndex, view){
   render();
 }
 
+function getRecentMeetings(visits, count){
+  if (!visits || visits.length === 0) return [];
+  return visits.slice(-count).reverse();
+}
+
 function render(){
   let board = document.getElementById('board');
   board.innerHTML = '';
@@ -629,12 +636,14 @@ function render(){
         card.className = `card ${issue.flagged ? 'flagged' : ''}`;
 
         let meetingsHtml = '';
-        if (issue.visits && issue.visits.length > 0) {
+        const recentMeetings = getRecentMeetings(issue.visits, 2);
+        if (recentMeetings.length > 0) {
           meetingsHtml = '<div class="meetings">';
-          issue.visits.forEach((visit, visitIndex) => {
+          recentMeetings.forEach((visit, idx) => {
+            const actualIndex = issue.visits.indexOf(visit);
             meetingsHtml += `
               <div class="meeting-item">
-                <div class="meeting-label">Meeting ${visitIndex + 1}</div>
+                <div class="meeting-label">Meeting ${actualIndex + 1}</div>
                 <div class="meeting-detail"><b>Date:</b> ${visit.date}</div>
                 <div class="meeting-detail"><b>People:</b> ${visit.people}</div>
                 <div class="meeting-detail"><b>Location:</b> ${visit.location}</div>
@@ -642,6 +651,9 @@ function render(){
               </div>
             `;
           });
+          if (issue.visits.length > 2) {
+            meetingsHtml += `<div style="color:#666; font-size:11px; margin-top:5px;">+${issue.visits.length - 2} more meetings</div>`;
+          }
           meetingsHtml += '</div>';
         }
 
@@ -789,7 +801,7 @@ function viewIssue(lineIndex, issueIndex, view){
     <p><b>Date Found:</b> ${issue.dateFound || 'Not set'}</p>
     <p><b>How issue was found:</b> ${issue.foundHow || 'Not set'}</p>
     <p>${issue.description}</p>
-    <h3>Meetings</h3>
+    <h3>Meetings (${issue.visits ? issue.visits.length : 0})</h3>
   `;
 
   if (issue.visits && issue.visits.length) {
@@ -846,7 +858,7 @@ function saveVisitEdit(lineIndex, issueIndex, visitIndex, view){
   let visit = issue.visits[visitIndex];
   visit.date = date.value;
   visit.people = people.value;
-  visit.location = location.value;
+  visit.location = location.location;
   visit.notes = notes.value;
   closeModal();
   render();
