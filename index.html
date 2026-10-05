@@ -346,6 +346,7 @@ h1{
 .card-button.blue{ background:#2d6cdf; color:white; border-color:#2d6cdf; }
 .card-button.flag{ background:#ff6b6b; color:white; border-color:#ff6b6b; }
 .card-button.flag.flagged{ background:#ffb3b3; }
+.card-button.photo{ background:#FF9800; color:white; border-color:#FF9800; }
 
 .modal{
  display:none;
@@ -378,6 +379,7 @@ input,textarea{
  background:#f7f7f7;
  padding:10px;
  border-left:4px solid var(--red);
+ border-radius: 4px;
 }
 
 .photo-gallery{
@@ -398,6 +400,9 @@ input,textarea{
 
 .photo-upload{
  margin-top:8px;
+ padding:8px;
+ background:#f0f0f0;
+ border-radius:4px;
 }
 
 .photo-upload input[type="file"]{
@@ -408,7 +413,7 @@ input,textarea{
 .upload-status{
  font-size:12px;
  margin-top:5px;
- padding:5px;
+ padding:5px 8px;
  border-radius:4px;
 }
 
@@ -532,7 +537,7 @@ function setupGitHubToken(){
     sessionStorage.setItem("githubToken", token);
     githubToken = token;
     updateTokenStatus();
-    alert("✅ GitHub token saved! Data will sync to your repo.");
+    alert("✅ GitHub token saved! Photos will upload to your repo.");
   } else if (token) {
     alert("❌ Invalid token format. Must start with 'ghp_'");
   }
@@ -1034,62 +1039,65 @@ function viewIssue(lineIndex, issueIndex, view){
       
       html += `
           <div class="photo-upload">
-            <input type="file" accept="image/*" onchange="handlePhotoUpload(${lineIndex}, ${issueIndex}, ${index}, '${view}', event)">
+            <label style="font-weight:bold; display:block; margin-bottom:5px;">📸 Attach Photos:</label>
+            <input type="file" accept="image/*" multiple onchange="handlePhotoUpload(${lineIndex}, ${issueIndex}, ${index}, '${view}', event)">
+            <div id="upload-status-${index}"></div>
           </div>
-          <button onclick="editVisit(${lineIndex}, ${issueIndex}, ${index}, '${view}')">Edit</button>
-          <button onclick="deleteVisit(${lineIndex}, ${issueIndex}, ${index}, '${view}')">Delete</button>
+          <div style="margin-top:10px; gap:6px; display:flex; flex-wrap:wrap;">
+            <button class="card-button" onclick="editVisit(${lineIndex}, ${issueIndex}, ${index}, '${view}')">Edit Meeting</button>
+            <button class="card-button" style="background:#dc3545; border-color:#dc3545;" onclick="deleteVisit(${lineIndex}, ${issueIndex}, ${index}, '${view}')">Delete Meeting</button>
+          </div>
         </div>
       `;
     });
   }
 
-  html += '<br><button onclick="closeModal()">Close</button>';
+  html += '<br><button class="card-button green" onclick="closeModal()" style="width:auto;">Close</button>';
   openModal(html);
 }
 
 async function handlePhotoUpload(lineIndex, issueIndex, meetingIndex, view, event){
-  const file = event.target.files[0];
-  if (!file) return;
+  const files = event.target.files;
+  if (!files || files.length === 0) return;
   
   if (!githubToken) {
-    alert("Please setup GitHub token first (Setup GitHub button)");
+    alert("⚠️  Please setup GitHub token first (Setup GitHub button in top right)");
     return;
   }
   
   const issue = view === SOLVED_VIEW ? lines[lineIndex].resolvedIssues[issueIndex] : lines[lineIndex].issues[issueIndex];
   const visit = issue.visits[meetingIndex];
   
-  const statusDiv = event.target.parentElement;
-  const statusEl = document.createElement('div');
-  statusEl.className = 'upload-status loading';
-  statusEl.textContent = '⏳ Uploading...';
-  statusDiv.appendChild(statusEl);
+  const statusEl = document.getElementById(`upload-status-${meetingIndex}`);
   
-  try {
-    const photoData = await uploadPhotoToGitHub(lineIndex, issueIndex, meetingIndex, file);
+  for (let file of files) {
+    const fileStatus = document.createElement('div');
+    fileStatus.className = 'upload-status loading';
+    fileStatus.textContent = `⏳ Uploading ${file.name}...`;
+    statusEl.appendChild(fileStatus);
     
-    if (photoData) {
-      if (!visit.photos) visit.photos = [];
-      visit.photos.push({
-        name: photoData.name,
-        url: photoData.url,
-        uploadedAt: new Date().toISOString()
-      });
+    try {
+      const photoData = await uploadPhotoToGitHub(lineIndex, issueIndex, meetingIndex, file);
       
-      statusEl.className = 'upload-status success';
-      statusEl.textContent = '✅ Photo uploaded!';
-      
-      render();
-      
-      setTimeout(() => {
-        viewIssue(lineIndex, issueIndex, view);
-      }, 1000);
-    } else {
-      throw new Error("Upload failed");
+      if (photoData) {
+        if (!visit.photos) visit.photos = [];
+        visit.photos.push({
+          name: photoData.name,
+          url: photoData.url,
+          uploadedAt: new Date().toISOString()
+        });
+        
+        fileStatus.className = 'upload-status success';
+        fileStatus.textContent = `✅ ${file.name} uploaded!`;
+        
+        render();
+      } else {
+        throw new Error("Upload failed");
+      }
+    } catch (error) {
+      fileStatus.className = 'upload-status error';
+      fileStatus.textContent = `❌ ${file.name} failed: ${error.message}`;
     }
-  } catch (error) {
-    statusEl.className = 'upload-status error';
-    statusEl.textContent = '❌ Upload failed: ' + error.message;
   }
 }
 
