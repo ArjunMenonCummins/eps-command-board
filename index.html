@@ -39,7 +39,8 @@ body{
  gap:10px;
 }
 
-.view-toggle button{
+.view-toggle button,
+.search-actions button{
  padding:10px 16px;
  font-weight:bold;
 }
@@ -47,6 +48,98 @@ body{
 .view-toggle .active{
  background:#222;
  color:white;
+}
+
+.search-wrap{
+ display:flex;
+ gap:10px;
+ margin-top:18px;
+ align-items:center;
+ flex-wrap:wrap;
+}
+
+.search-box{
+ flex:1;
+ min-width:300px;
+ padding:14px 16px;
+ font-size:15px;
+ border:1px solid #ccc;
+ border-radius:8px;
+}
+
+.search-panel{
+ margin-top:20px;
+ background:#f8f8f8;
+ border:1px solid #ddd;
+ border-radius:10px;
+ padding:14px;
+}
+
+.search-panel h3{
+ margin:0 0 10px 0;
+}
+
+.search-results{
+ display:flex;
+ flex-direction:column;
+ gap:10px;
+}
+
+.search-item{
+ background:white;
+ border:1px solid #ddd;
+ border-radius:8px;
+ padding:12px;
+}
+
+.search-item-header{
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+ gap:10px;
+ margin-bottom:8px;
+ flex-wrap:wrap;
+}
+
+.search-status{
+ font-weight:bold;
+ padding:4px 10px;
+ border-radius:999px;
+ font-size:12px;
+}
+
+.search-status.current{
+ background:#dfeeff;
+ color:#0c4ca3;
+}
+
+.search-status.resolved{
+ background:#dff7e8;
+ color:#1d6e3b;
+}
+
+.search-item-title{
+ font-size:16px;
+ font-weight:bold;
+ margin-bottom:6px;
+}
+
+.search-meta{
+ color:#555;
+ font-size:13px;
+ line-height:1.7;
+}
+
+.search-item-actions{
+ margin-top:10px;
+}
+
+.search-empty{
+ background:white;
+ border:1px dashed #ccc;
+ border-radius:8px;
+ padding:14px;
+ color:#555;
 }
 
 .stats{
@@ -259,6 +352,19 @@ Visits This Week:
 
 </div>
 
+<div class="search-wrap">
+  <input id="searchInput" class="search-box" type="text" placeholder="Search ESN, problem, description, notes, part numbers..." />
+  <div class="search-actions">
+    <button onclick="runSearch()">Search</button>
+    <button onclick="clearSearch()">Clear</button>
+  </div>
+</div>
+
+<div class="search-panel">
+  <h3>Search Results</h3>
+  <div id="searchResults" class="search-results"></div>
+</div>
+
 </div>
 
 <div id="board" class="board"></div>
@@ -274,6 +380,7 @@ Visits This Week:
 const CURRENT_VIEW = "current";
 const SOLVED_VIEW = "solved";
 let currentView = localStorage.getItem("epsCurrentView") || CURRENT_VIEW;
+let searchResults = [];
 
 let lines = JSON.parse(
  localStorage.getItem("epsLines")
@@ -474,6 +581,7 @@ function render(){
  document.getElementById("resolvedCount").innerText=getTotalResolvedIssues();
  document.getElementById("visitCount").innerText=getTotalVisits();
 
+ renderSearchResults();
  saveData();
 }
 
@@ -747,6 +855,120 @@ function deleteVisit(
 
  render();
 }
+
+function matchesQuery(issue, q) {
+  const searchable = [
+    issue.title || '',
+    issue.esn || '',
+    issue.station || '',
+    issue.description || '',
+    issue.foundHow || '',
+    issue.dateFound || '',
+    issue.line || '',
+    issue.resolvedDate || ''
+  ];
+
+  if (issue.visits && issue.visits.length) {
+    issue.visits.forEach(visit => {
+      searchable.push(visit.date || '');
+      searchable.push(visit.people || '');
+      searchable.push(visit.location || '');
+      searchable.push(visit.notes || '');
+    });
+  }
+
+  const haystack = searchable.join(' ').toLowerCase();
+  return haystack.includes(q);
+}
+
+function runSearch() {
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  if (!q) {
+    searchResults = [];
+    renderSearchResults();
+    return;
+  }
+
+  searchResults = [];
+
+  lines.forEach((line) => {
+    line.issues.forEach((issue, issueIndex) => {
+      if (matchesQuery(issue, q)) {
+        searchResults.push({
+          status: 'Current',
+          lineName: line.name,
+          lineIndex,
+          issueIndex,
+          issue
+        });
+      }
+    });
+
+    line.resolvedIssues.forEach((issue, issueIndex) => {
+      if (matchesQuery(issue, q)) {
+        searchResults.push({
+          status: 'Resolved',
+          lineName: line.name,
+          lineIndex,
+          issueIndex,
+          issue
+        });
+      }
+    });
+  });
+
+  renderSearchResults();
+}
+
+function clearSearch() {
+  document.getElementById('searchInput').value = '';
+  searchResults = [];
+  renderSearchResults();
+}
+
+function renderSearchResults() {
+  const container = document.getElementById('searchResults');
+
+  if (!searchResults.length) {
+    container.innerHTML = '<div class="search-empty">No matching issues found. Try searching by ESN, title, description, station, part numbers, or notes.</div>';
+    return;
+  }
+
+  container.innerHTML = searchResults.map((result) => {
+    const issue = result.issue;
+    const snippet = (issue.description || issue.foundHow || 'No description available').slice(0, 180);
+    const statusClass = result.status === 'Resolved' ? 'resolved' : 'current';
+    const openAction = result.status === 'Resolved'
+      ? `viewIssue(${result.lineIndex}, ${result.issueIndex}, '${SOLVED_VIEW}')`
+      : `viewIssue(${result.lineIndex}, ${result.issueIndex}, '${CURRENT_VIEW}')`;
+
+    return `
+      <div class="search-item">
+        <div class="search-item-header">
+          <div class="search-status ${statusClass}">${result.status}</div>
+          <div>${result.lineName}</div>
+        </div>
+        <div class="search-item-title">${issue.title}</div>
+        <div class="search-meta">
+          <div><b>ESN:</b> ${issue.esn || 'Not set'}</div>
+          <div><b>Station:</b> ${issue.station || 'Not set'}</div>
+          <div><b>Date Found:</b> ${issue.dateFound || 'Not set'}</div>
+          <div><b>How Found:</b> ${issue.foundHow || 'Not set'}</div>
+          <div><b>Description:</b> ${snippet}</div>
+        </div>
+        <div class="search-item-actions">
+          <button onclick="${openAction}">Open Issue</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+document.getElementById('searchInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    runSearch();
+  }
+});
 
 render();
 
