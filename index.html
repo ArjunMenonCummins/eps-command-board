@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>EPS Command Board</title>
+
+<style>
+:root{
+ --red:#DA291C;
+ --orange:#F58220;
+ --yellow:#FFD100;
+ --green:#4CAF50;
+}
+
+body{
+ margin:0;
+ font-family:Segoe UI,sans-serif;
+ background:#fff;
+ color:#222;
+}
+
+.header{
+ padding:20px;
+ border-bottom:1px solid #ddd;
+}
+
+.stats{
+ display:flex;
+ gap:15px;
+ margin-top:10px;
+}
+
+.stat{
+ background:#f5f5f5;
+ padding:10px 18px;
+ border-radius:8px;
+ border:1px solid #ddd;
+}
+
+.board{
+ display:flex;
+ gap:15px;
+ padding:15px;
+ overflow-x:auto;
+ align-items:flex-start;
+}
+
+.column{
+ min-width:350px;
+ border:1px solid #ddd;
+ border-radius:10px;
+ background:#fafafa;
+}
+
+.column-header{
+ padding:12px;
+ color:white;
+ font-weight:bold;
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+}
+
+.red{background:var(--red);}
+.orange{background:var(--orange);}
+.yellow{
+ background:var(--yellow);
+ color:black;
+}
+.green{background:var(--green);}
+
+.card{
+ background:white;
+ margin:10px;
+ border:1px solid #ddd;
+ border-radius:8px;
+ padding:10px;
+}
+
+.actions{
+ display:flex;
+ gap:5px;
+ flex-wrap:wrap;
+ margin-top:10px;
+}
+
+button{
+ cursor:pointer;
+ border:none;
+ padding:8px 12px;
+ border-radius:6px;
+ background:#ececec;
+}
+
+button:hover{
+ background:#ddd;
+}
+
+.resolve-btn{
+ background:#4CAF50;
+ color:white;
+}
+
+.resolve-btn:hover{
+ background:#45a049;
+}
+
+.modal{
+ display:none;
+ position:fixed;
+ inset:0;
+ background:rgba(0,0,0,.7);
+ overflow:auto;
+ z-index:1000;
+}
+
+.modal-content{
+ max-width:900px;
+ margin:40px auto;
+ background:white;
+ padding:20px;
+ border-radius:8px;
+}
+
+input,textarea{
+ width:100%;
+ padding:8px;
+ margin-bottom:10px;
+ box-sizing:border-box;
+}
+
+.visit{
+ margin-top:10px;
+ background:#f7f7f7;
+ padding:10px;
+ border-left:4px solid var(--red);
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+
+<h1>EPS COMMAND BOARD</h1>
+
+<div class="stats">
+
+<div class="stat">
+Current Issues:
+<span id="issueCount">0</span>
+</div>
+
+<div class="stat">
+Issues Resolved:
+<span id="resolvedCount">0</span>
+</div>
+
+<div class="stat">
+Visits This Week:
+<span id="visitCount">0</span>
+</div>
+
+</div>
+
+</div>
+
+<div id="board" class="board"></div>
+
+<div id="modal" class="modal">
+<div class="modal-content">
+<div id="modalContent"></div>
+</div>
+</div>
+
+<script>
+
+let lines = JSON.parse(
+ localStorage.getItem("epsLines")
+) || [
+
+{
+ name:"19L",
+ color:"red",
+ issues:[]
+},
+
+{
+ name:"30L",
+ color:"orange",
+ issues:[]
+},
+
+{
+ name:"95L",
+ color:"yellow",
+ issues:[]
+},
+
+{
+ name:"15L",
+ color:"green",
+ issues:[]
+}
+
+];
+
+let resolvedIssues = JSON.parse(
+ localStorage.getItem("epsResolvedIssues")
+) || [];
+
+function saveData(){
+ localStorage.setItem(
+   "epsLines",
+   JSON.stringify(lines)
+ );
+ localStorage.setItem(
+   "epsResolvedIssues",
+   JSON.stringify(resolvedIssues)
+ );
+}
+
+function render(){
+
+ lines.sort(
+   (a,b)=>b.issues.length-a.issues.length
+ );
+
+ let issueTotal=0;
+ let visitTotal=0;
+
+ let board=document.getElementById("board");
+ board.innerHTML="";
+
+ lines.forEach((line,lineIndex)=>{
+
+   issueTotal += line.issues.length;
+
+   line.issues.forEach(issue=>{
+      visitTotal += issue.visits.length;
+   });
+
+   let column=document.createElement("div");
+   column.className="column";
+
+   column.innerHTML=
+   `
+   <div class="column-header ${line.color}">
+      <span>${line.name} (${line.issues.length})</span>
+
+      <button onclick="addIssue(${lineIndex})">
+      + Issue
+      </button>
+   </div>
+   `;
+
+   line.issues.forEach((issue,issueIndex)=>{
+
+      let card=document.createElement("div");
+      card.className="card";
+
+      card.innerHTML=
+      `
+      <b>${issue.title}</b><br>
+      ESN: ${issue.esn}<br>
+      Station: ${issue.station}<br>
+      Visits: ${issue.visits.length}
+
+      <div class="actions">
+
+        <button onclick="viewIssue(${lineIndex},${issueIndex})">
+        Open
+        </button>
+
+        <button onclick="editIssue(${lineIndex},${issueIndex})">
+        Edit
+        </button>
+
+        <button onclick="deleteIssue(${lineIndex},${issueIndex})">
+        Delete
+        </button>
+
+        <button onclick="addVisit(${lineIndex},${issueIndex})">
+        + Meeting
+        </button>
+
+      </div>
+      `;
+
+      column.appendChild(card);
+
+   });
+
+   board.appendChild(column);
+
+ });
+
+ document.getElementById("issueCount").innerText=issueTotal;
+ document.getElementById("resolvedCount").innerText=resolvedIssues.length;
+ document.getElementById("visitCount").innerText=visitTotal;
+
+ saveData();
+}
+
+function openModal(html){
+ document.getElementById("modalContent").innerHTML=html;
+ document.getElementById("modal").style.display="block";
+}
+
+function closeModal(){
+ document.getElementById("modal").style.display="none";
+}
+
+function addIssue(lineIndex){
+
+ openModal(`
+ <h2>New Issue</h2>
+
+ <input id="title" placeholder="Title">
+ <input id="esn" placeholder="ESN">
+ <input id="station" placeholder="Station">
+ <textarea id="description" placeholder="Description"></textarea>
+
+ <button onclick="saveNewIssue(${lineIndex})">
+ Save
+ </button>
+
+ <button onclick="closeModal()">
+ Cancel
+ </button>
+ `);
+
+}
+
+function saveNewIssue(lineIndex){
+
+ lines[lineIndex].issues.push({
+   title:title.value,
+   esn:esn.value,
+   station:station.value,
+   description:description.value,
+   visits:[]
+ });
+
+ closeModal();
+ render();
+}
+
+function editIssue(lineIndex,issueIndex){
+
+ let issue =
+ lines[lineIndex].issues[issueIndex];
+
+ openModal(`
+ <h2>Edit Issue</h2>
+
+ <input id="title" value="${issue.title}">
+ <input id="esn" value="${issue.esn}">
+ <input id="station" value="${issue.station}">
+ <textarea id="description">${issue.description}</textarea>
+
+ <button onclick="
+ updateIssue(${lineIndex},${issueIndex})
+ ">
+ Save
+ </button>
+ `);
+
+}
+
+function updateIssue(lineIndex,issueIndex){
+
+ let issue =
+ lines[lineIndex].issues[issueIndex];
+
+ issue.title=title.value;
+ issue.esn=esn.value;
+ issue.station=station.value;
+ issue.description=description.value;
+
+ closeModal();
+ render();
+}
+
+function deleteIssue(lineIndex,issueIndex){
+
+ if(confirm("Delete issue?")){
+
+  lines[lineIndex]
+    .issues
+    .splice(issueIndex,1);
+
+  render();
+ }
+}
+
+function addVisit(lineIndex,issueIndex){
+
+ openModal(`
+ <h2>Add Meeting</h2>
+
+ <input id="date" placeholder="Date">
+ <input id="people" placeholder="People">
+ <input id="location" placeholder="Location">
+ <textarea id="notes" placeholder="Notes"></textarea>
+
+ <button onclick="
+ saveVisit(${lineIndex},${issueIndex})
+ ">
+ Save
+ </button>
+ `);
+
+}
+
+function saveVisit(lineIndex,issueIndex){
+
+ lines[lineIndex]
+ .issues[issueIndex]
+ .visits.push({
+
+   date:date.value,
+   people:people.value,
+   location:location.value,
+   notes:notes.value
+
+ });
+
+ closeModal();
+ render();
+}
+
+function viewIssue(lineIndex,issueIndex){
+
+ let issue =
+ lines[lineIndex].issues[issueIndex];
+
+ let html=`
+ <h2>${issue.title}</h2>
+
+ <p><b>ESN:</b> ${issue.esn}</p>
+ <p><b>Station:</b> ${issue.station}</p>
+ <p>${issue.description}</p>
+
+ <h3>Meetings</h3>
+ `;
+
+ issue.visits.forEach((visit,index)=>{
+
+ html += `
+ <div class="visit">
+
+ <b>Meeting ${index+1}</b><br><br>
+
+ Date: ${visit.date}<br>
+ People: ${visit.people}<br>
+ Location: ${visit.location}<br>
+ Notes: ${visit.notes}
+
+ <br><br>
+
+ <button onclick="
+ editVisit(${lineIndex},
+           ${issueIndex},
+           ${index})">
+ Edit
+ </button>
+
+ <button onclick="
+ deleteVisit(${lineIndex},
+             ${issueIndex},
+             ${index})">
+ Delete
+ </button>
+
+ </div>
+ `;
+ });
+
+ html += `
+ <br>
+ <button class="resolve-btn" onclick="resolveIssue(${lineIndex},${issueIndex})">
+ Issue Resolved
+ </button>
+
+ <button onclick="closeModal()">
+ Close
+ </button>
+ `;
+
+ openModal(html);
+}
+
+function resolveIssue(lineIndex,issueIndex){
+
+ let issue = lines[lineIndex].issues[issueIndex];
+
+ resolvedIssues.push({
+   title:issue.title,
+   esn:issue.esn,
+   station:issue.station,
+   line:lines[lineIndex].name,
+   resolvedDate:new Date().toLocaleString(),
+   visits:issue.visits.length
+ });
+
+ lines[lineIndex].issues.splice(issueIndex,1);
+
+ closeModal();
+ render();
+}
+
+function editVisit(lineIndex,issueIndex,visitIndex){
+
+ let visit =
+ lines[lineIndex]
+ .issues[issueIndex]
+ .visits[visitIndex];
+
+ openModal(`
+
+ <h2>Edit Meeting</h2>
+
+ <input id="date" value="${visit.date}">
+ <input id="people" value="${visit.people}">
+ <input id="location" value="${visit.location}">
+ <textarea id="notes">${visit.notes}</textarea>
+
+ <button onclick="
+ saveVisitEdit(
+ ${lineIndex},
+ ${issueIndex},
+ ${visitIndex}
+ )">
+ Save
+ </button>
+
+ `);
+
+}
+
+function saveVisitEdit(
+ lineIndex,
+ issueIndex,
+ visitIndex
+){
+
+ let visit =
+ lines[lineIndex]
+ .issues[issueIndex]
+ .visits[visitIndex];
+
+ visit.date=date.value;
+ visit.people=people.value;
+ visit.location=location.value;
+ visit.notes=notes.value;
+
+ closeModal();
+ render();
+}
+
+function deleteVisit(
+ lineIndex,
+ issueIndex,
+ visitIndex
+){
+
+ lines[lineIndex]
+ .issues[issueIndex]
+ .visits
+ .splice(visitIndex,1);
+
+ render();
+}
+
+render();
+
+</script>
+
+</body>
+</html>
