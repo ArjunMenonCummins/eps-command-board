@@ -1,5 +1,5 @@
 {
-  "lastSync": "2026-10-05T16:08:36.743Z",
+  "lastSync": "2026-10-05T16:08:40.139Z",
   "lines": [
     {
       "name": "19L",
@@ -12,7 +12,15 @@
           "dateFound": "",
           "foundHow": "",
           "description": "",
-          "visits": [],
+          "visits": [
+            {
+              "date": "",
+              "people": "",
+              "location": "",
+              "notes": "",
+              "photos": []
+            }
+          ],
           "flagged": false
         }
       ],
