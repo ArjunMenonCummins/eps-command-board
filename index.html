@@ -61,6 +61,24 @@ body{
  display:flex;
  justify-content:space-between;
  align-items:center;
+ gap:10px;
+}
+
+.header-title{
+ flex:1;
+}
+
+.header-badges{
+ display:flex;
+ gap:8px;
+ font-size:12px;
+}
+
+.badge{
+ background:rgba(255,255,255,0.3);
+ padding:4px 8px;
+ border-radius:4px;
+ white-space:nowrap;
 }
 
 .red{background:var(--red);}
@@ -79,6 +97,42 @@ body{
  padding:10px;
 }
 
+.card-title{
+ font-weight:bold;
+ margin-bottom:8px;
+}
+
+.card-info{
+ font-size:14px;
+ margin-bottom:8px;
+ color:#555;
+}
+
+.meetings{
+ margin-top:10px;
+ border-top:1px solid #eee;
+ padding-top:8px;
+}
+
+.meeting-item{
+ background:#f9f9f9;
+ padding:8px;
+ margin:5px 0;
+ border-radius:4px;
+ font-size:12px;
+ border-left:3px solid var(--orange);
+}
+
+.meeting-label{
+ font-weight:bold;
+ color:#333;
+}
+
+.meeting-detail{
+ color:#666;
+ margin-top:3px;
+}
+
 .actions{
  display:flex;
  gap:5px;
@@ -92,6 +146,7 @@ button{
  padding:8px 12px;
  border-radius:6px;
  background:#ececec;
+ font-size:12px;
 }
 
 button:hover{
@@ -221,6 +276,10 @@ function saveData(){
  );
 }
 
+function getResolvedCountForLine(lineName){
+ return resolvedIssues.filter(issue => issue.line === lineName).length;
+}
+
 function render(){
 
  lines.sort(
@@ -244,11 +303,18 @@ function render(){
    let column=document.createElement("div");
    column.className="column";
 
+   let resolvedCount = getResolvedCountForLine(line.name);
+
    column.innerHTML=
    `
    <div class="column-header ${line.color}">
-      <span>${line.name} (${line.issues.length})</span>
-
+      <div class="header-title">
+        ${line.name} (${line.issues.length})
+      </div>
+      <div class="header-badges">
+        <div class="badge">Current: ${line.issues.length}</div>
+        <div class="badge">Solved: ${resolvedCount}</div>
+      </div>
       <button onclick="addIssue(${lineIndex})">
       + Issue
       </button>
@@ -260,12 +326,32 @@ function render(){
       let card=document.createElement("div");
       card.className="card";
 
+      let meetingsHtml = '';
+      if(issue.visits.length > 0){
+        meetingsHtml = '<div class="meetings">';
+        issue.visits.forEach((visit, visitIndex) => {
+          meetingsHtml += `
+          <div class="meeting-item">
+            <div class="meeting-label">Meeting ${visitIndex + 1}</div>
+            <div class="meeting-detail"><b>Date:</b> ${visit.date}</div>
+            <div class="meeting-detail"><b>People:</b> ${visit.people}</div>
+            <div class="meeting-detail"><b>Location:</b> ${visit.location}</div>
+            <div class="meeting-detail"><b>Notes:</b> ${visit.notes}</div>
+          </div>
+          `;
+        });
+        meetingsHtml += '</div>';
+      }
+
       card.innerHTML=
       `
-      <b>${issue.title}</b><br>
-      ESN: ${issue.esn}<br>
-      Station: ${issue.station}<br>
-      Visits: ${issue.visits.length}
+      <div class="card-title">${issue.title}</div>
+      <div class="card-info">
+        ESN: ${issue.esn}<br>
+        Station: ${issue.station}
+      </div>
+
+      ${meetingsHtml}
 
       <div class="actions">
 
@@ -283,6 +369,10 @@ function render(){
 
         <button onclick="addVisit(${lineIndex},${issueIndex})">
         + Meeting
+        </button>
+
+        <button class="resolve-btn" onclick="resolveIssue(${lineIndex},${issueIndex})">
+        Resolve
         </button>
 
       </div>
@@ -480,10 +570,6 @@ function viewIssue(lineIndex,issueIndex){
 
  html += `
  <br>
- <button class="resolve-btn" onclick="resolveIssue(${lineIndex},${issueIndex})">
- Issue Resolved
- </button>
-
  <button onclick="closeModal()">
  Close
  </button>
@@ -507,7 +593,6 @@ function resolveIssue(lineIndex,issueIndex){
 
  lines[lineIndex].issues.splice(issueIndex,1);
 
- closeModal();
  render();
 }
 
