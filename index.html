@@ -63,33 +63,52 @@ body{
  min-width:300px;
  padding:14px 16px;
  font-size:15px;
- border:1px solid #ccc;
+ border:2px solid #222;
  border-radius:8px;
+ font-weight:bold;
+}
+
+.search-box::placeholder{
+ font-weight:normal;
+}
+
+.search-actions button{
+ padding:12px 20px;
+ background:#222;
+ color:white;
+ font-size:13px;
+}
+
+.search-actions button:hover{
+ background:#333;
 }
 
 .search-panel{
  margin-top:20px;
- background:#f8f8f8;
- border:1px solid #ddd;
+ background:#f0f0f0;
+ border:2px solid #222;
  border-radius:10px;
- padding:14px;
+ padding:16px;
+ max-height:500px;
+ overflow-y:auto;
 }
 
 .search-panel h3{
- margin:0 0 10px 0;
+ margin:0 0 12px 0;
+ font-size:18px;
 }
 
 .search-results{
  display:flex;
  flex-direction:column;
- gap:10px;
+ gap:12px;
 }
 
 .search-item{
  background:white;
- border:1px solid #ddd;
+ border:2px solid #ddd;
  border-radius:8px;
- padding:12px;
+ padding:14px;
 }
 
 .search-item-header{
@@ -97,15 +116,16 @@ body{
  justify-content:space-between;
  align-items:center;
  gap:10px;
- margin-bottom:8px;
+ margin-bottom:10px;
  flex-wrap:wrap;
 }
 
 .search-status{
  font-weight:bold;
- padding:4px 10px;
- border-radius:999px;
+ padding:6px 12px;
+ border-radius:20px;
  font-size:12px;
+ white-space:nowrap;
 }
 
 .search-status.current{
@@ -118,28 +138,54 @@ body{
  color:#1d6e3b;
 }
 
+.search-line-badge{
+ background:#222;
+ color:white;
+ padding:4px 10px;
+ border-radius:4px;
+ font-size:12px;
+ font-weight:bold;
+}
+
 .search-item-title{
  font-size:16px;
  font-weight:bold;
- margin-bottom:6px;
+ margin-bottom:8px;
+ color:#222;
 }
 
 .search-meta{
- color:#555;
+ color:#444;
  font-size:13px;
- line-height:1.7;
+ line-height:1.8;
+}
+
+.search-meta div{
+ margin-bottom:4px;
 }
 
 .search-item-actions{
- margin-top:10px;
+ margin-top:12px;
+}
+
+.search-item-actions button{
+ background:#222;
+ color:white;
+ padding:10px 16px;
+ font-weight:bold;
+}
+
+.search-item-actions button:hover{
+ background:#333;
 }
 
 .search-empty{
  background:white;
- border:1px dashed #ccc;
+ border:2px dashed #999;
  border-radius:8px;
- padding:14px;
- color:#555;
+ padding:16px;
+ color:#666;
+ text-align:center;
 }
 
 .stats{
@@ -334,26 +380,13 @@ input,textarea{
 </div>
 
 <div class="stats">
-
-<div class="stat">
-Current Issues:
-<span id="issueCount">0</span>
-</div>
-
-<div class="stat">
-Issues Resolved:
-<span id="resolvedCount">0</span>
-</div>
-
-<div class="stat">
-Visits This Week:
-<span id="visitCount">0</span>
-</div>
-
+<div class="stat">Current Issues: <span id="issueCount">0</span></div>
+<div class="stat">Issues Resolved: <span id="resolvedCount">0</span></div>
+<div class="stat">Visits This Week: <span id="visitCount">0</span></div>
 </div>
 
 <div class="search-wrap">
-  <input id="searchInput" class="search-box" type="text" placeholder="Search ESN, problem, description, notes, part numbers..." />
+  <input id="searchInput" class="search-box" type="text" placeholder="🔍 Search everything (ESN, title, description, notes...)" />
   <div class="search-actions">
     <button onclick="runSearch()">Search</button>
     <button onclick="clearSearch()">Clear</button>
@@ -361,7 +394,7 @@ Visits This Week:
 </div>
 
 <div class="search-panel">
-  <h3>Search Results</h3>
+  <h3>📋 Search Results</h3>
   <div id="searchResults" class="search-results"></div>
 </div>
 
@@ -382,47 +415,20 @@ const SOLVED_VIEW = "solved";
 let currentView = localStorage.getItem("epsCurrentView") || CURRENT_VIEW;
 let searchResults = [];
 
-let lines = JSON.parse(
- localStorage.getItem("epsLines")
-) || [
-
-{
- name:"19L",
- color:"red",
- issues:[],
- resolvedIssues:[]
-},
-
-{
- name:"30L",
- color:"orange",
- issues:[],
- resolvedIssues:[]
-},
-
-{
- name:"95L",
- color:"yellow",
- issues:[],
- resolvedIssues:[]
-},
-
-{
- name:"15L",
- color:"green",
- issues:[],
- resolvedIssues:[]
-}
-
+let lines = JSON.parse(localStorage.getItem("epsLines")) || [
+  { name:"19L", color:"red", issues:[], resolvedIssues:[] },
+  { name:"30L", color:"orange", issues:[], resolvedIssues:[] },
+  { name:"95L", color:"yellow", issues:[], resolvedIssues:[] },
+  { name:"15L", color:"green", issues:[], resolvedIssues:[] }
 ];
 
 function normalizeLines() {
- lines = lines.map(line => ({
-   name: line.name,
-   color: line.color,
-   issues: Array.isArray(line.issues) ? line.issues : [],
-   resolvedIssues: Array.isArray(line.resolvedIssues) ? line.resolvedIssues : []
- }));
+  lines = lines.map(line => ({
+    name: line.name,
+    color: line.color,
+    issues: Array.isArray(line.issues) ? line.issues : [],
+    resolvedIssues: Array.isArray(line.resolvedIssues) ? line.resolvedIssues : []
+  }));
 }
 
 normalizeLines();
@@ -431,11 +437,8 @@ const legacyResolved = JSON.parse(localStorage.getItem("epsResolvedIssues") || "
 if (legacyResolved.length && lines.some(line => line.resolvedIssues.length === 0)) {
   legacyResolved.forEach(issue => {
     const targetLine = lines.find(line => line.name === issue.line);
-    if (targetLine && !targetLine.resolvedIssues.some(item => item.title === issue.title && item.esn === issue.esn && item.station === issue.station)) {
-      targetLine.resolvedIssues.push({
-        ...issue,
-        visits: Array.isArray(issue.visits) ? issue.visits : []
-      });
+    if (targetLine && !targetLine.resolvedIssues.some(item => item.title === issue.title && item.esn === issue.esn)) {
+      targetLine.resolvedIssues.push({ ...issue, visits: Array.isArray(issue.visits) ? issue.visits : [] });
     }
   });
   localStorage.setItem("epsResolvedIssues", JSON.stringify([]));
@@ -444,446 +447,41 @@ if (legacyResolved.length && lines.some(line => line.resolvedIssues.length === 0
 function saveData(){
   localStorage.setItem("epsLines", JSON.stringify(lines));
   localStorage.setItem("epsCurrentView", currentView);
-
-  const flattenedResolved = lines.flatMap(line => line.resolvedIssues.map(issue => ({
-    ...issue,
-    line: line.name
-  })));
+  const flattenedResolved = lines.flatMap(line => line.resolvedIssues.map(issue => ({ ...issue, line: line.name })));
   localStorage.setItem("epsResolvedIssues", JSON.stringify(flattenedResolved));
 }
 
-function getTotalCurrentIssues(){
-  return lines.reduce((total, line) => total + line.issues.length, 0);
-}
-
-function getTotalResolvedIssues(){
-  return lines.reduce((total, line) => total + line.resolvedIssues.length, 0);
-}
-
+function getTotalCurrentIssues(){ return lines.reduce((total, line) => total + line.issues.length, 0); }
+function getTotalResolvedIssues(){ return lines.reduce((total, line) => total + line.resolvedIssues.length, 0); }
 function getTotalVisits(){
-  return lines.reduce((total, line) => {
-    return total + line.issues.reduce((sum, issue) => sum + issue.visits.length, 0) + line.resolvedIssues.reduce((sum, issue) => sum + issue.visits.length, 0);
-  }, 0);
+  return lines.reduce((total, line) => total + line.issues.reduce((sum, issue) => sum + (issue.visits ? issue.visits.length : 0), 0) + line.resolvedIssues.reduce((sum, issue) => sum + (issue.visits ? issue.visits.length : 0), 0), 0);
 }
 
-function setView(view){
-  currentView = view;
-  render();
-}
+function setView(view){ currentView = view; render(); }
 
-function render(){
-
- lines.sort((a,b) => {
-   const aCount = currentView === CURRENT_VIEW ? b.issues.length : b.resolvedIssues.length;
-   const bCount = currentView === CURRENT_VIEW ? a.issues.length : a.resolvedIssues.length;
-   return aCount - bCount;
- });
-
- let board=document.getElementById("board");
- board.innerHTML="";
-
- document.getElementById("currentViewButton").classList.toggle("active", currentView === CURRENT_VIEW);
- document.getElementById("solvedViewButton").classList.toggle("active", currentView === SOLVED_VIEW);
-
- lines.forEach((line,lineIndex)=>{
-
-   let visibleIssues = currentView === CURRENT_VIEW ? line.issues : line.resolvedIssues;
-
-   let column=document.createElement("div");
-   column.className="column";
-
-   column.innerHTML=
-   `
-   <div class="column-header ${line.color}">
-      <div class="header-title">
-        ${line.name} (${visibleIssues.length})
-      </div>
-      <div class="header-badges">
-        <div class="badge">Current: ${line.issues.length}</div>
-        <div class="badge">Solved: ${line.resolvedIssues.length}</div>
-      </div>
-      <button onclick="addIssue(${lineIndex})">
-      + Issue
-      </button>
-   </div>
-   `;
-
-   visibleIssues.forEach((issue,issueIndex)=>{
-
-      let card=document.createElement("div");
-      card.className="card";
-
-      let meetingsHtml = '';
-      if(issue.visits && issue.visits.length > 0){
-        meetingsHtml = '<div class="meetings">';
-        issue.visits.forEach((visit, visitIndex) => {
-          meetingsHtml += `
-          <div class="meeting-item">
-            <div class="meeting-label">Meeting ${visitIndex + 1}</div>
-            <div class="meeting-detail"><b>Date:</b> ${visit.date}</div>
-            <div class="meeting-detail"><b>People:</b> ${visit.people}</div>
-            <div class="meeting-detail"><b>Location:</b> ${visit.location}</div>
-            <div class="meeting-detail"><b>Notes:</b> ${visit.notes}</div>
-          </div>
-          `;
-        });
-        meetingsHtml += '</div>';
-      }
-
-      const isSolvedView = currentView === SOLVED_VIEW;
-
-      card.innerHTML=
-      `
-      <div class="card-title">${issue.title}</div>
-      <div class="card-info">
-        ESN: ${issue.esn}<br>
-        Station: ${issue.station}<br>
-        Date Found: ${issue.dateFound || 'Not set'}<br>
-        Found By: ${issue.foundHow || 'Not set'}
-      </div>
-
-      ${meetingsHtml}
-
-      <div class="actions">
-
-        <button onclick="viewIssue(${lineIndex},${issueIndex}, '${currentView}')">
-        Open
-        </button>
-
-        <button onclick="editIssue(${lineIndex},${issueIndex}, '${currentView}')">
-        Edit
-        </button>
-
-        <button onclick="deleteIssue(${lineIndex},${issueIndex}, '${currentView}')">
-        Delete
-        </button>
-
-        <button onclick="addVisit(${lineIndex},${issueIndex}, '${currentView}')">
-        + Meeting
-        </button>
-
-        <button class="${isSolvedView ? 'current-btn' : 'resolve-btn'}" onclick="${isSolvedView ? `moveIssueToCurrent(${lineIndex},${issueIndex})` : `moveIssueToSolved(${lineIndex},${issueIndex})`}">
-        ${isSolvedView ? 'Move to Current' : 'Move to Solved'}
-        </button>
-
-      </div>
-      `;
-
-      column.appendChild(card);
-
-   });
-
-   board.appendChild(column);
-
- });
-
- document.getElementById("issueCount").innerText=getTotalCurrentIssues();
- document.getElementById("resolvedCount").innerText=getTotalResolvedIssues();
- document.getElementById("visitCount").innerText=getTotalVisits();
-
- renderSearchResults();
- saveData();
-}
-
-function openModal(html){
- document.getElementById("modalContent").innerHTML=html;
- document.getElementById("modal").style.display="block";
-}
-
-function closeModal(){
- document.getElementById("modal").style.display="none";
-}
-
-function addIssue(lineIndex){
-
- openModal(`
- <h2>New Issue</h2>
-
- <input id="title" placeholder="Title">
- <input id="esn" placeholder="ESN">
- <input id="station" placeholder="Station">
- <input id="dateFound" type="date" placeholder="Date Found">
- <textarea id="foundHow" placeholder="How issue was found"></textarea>
- <textarea id="description" placeholder="Description"></textarea>
-
- <button onclick="saveNewIssue(${lineIndex})">
- Save
- </button>
-
- <button onclick="closeModal()">
- Cancel
- </button>
- `);
-
-}
-
-function saveNewIssue(lineIndex){
-
- lines[lineIndex].issues.push({
-   title:title.value,
-   esn:esn.value,
-   station:station.value,
-   dateFound:dateFound.value,
-   foundHow:foundHow.value,
-   description:description.value,
-   visits:[]
- });
-
- closeModal();
- render();
-}
-
-function editIssue(lineIndex,issueIndex, view){
-
- let issue = view === SOLVED_VIEW ? lines[lineIndex].resolvedIssues[issueIndex] : lines[lineIndex].issues[issueIndex];
-
- openModal(`
- <h2>Edit Issue</h2>
-
- <input id="title" value="${issue.title}">
- <input id="esn" value="${issue.esn}">
- <input id="station" value="${issue.station}">
- <input id="dateFound" type="date" value="${issue.dateFound || ''}">
- <textarea id="foundHow">${issue.foundHow || ''}</textarea>
- <textarea id="description">${issue.description}</textarea>
-
- <button onclick="
- updateIssue(${lineIndex},${issueIndex}, '${view}')
- ">
- Save
- </button>
- `);
-
-}
-
-function updateIssue(lineIndex,issueIndex, view){
-
- let issue = view === SOLVED_VIEW ? lines[lineIndex].resolvedIssues[issueIndex] : lines[lineIndex].issues[issueIndex];
-
- issue.title=title.value;
- issue.esn=esn.value;
- issue.station=station.value;
- issue.dateFound=dateFound.value;
- issue.foundHow=foundHow.value;
- issue.description=description.value;
-
- closeModal();
- render();
-}
-
-function deleteIssue(lineIndex,issueIndex, view){
-
- if(confirm("Delete issue?")){
-
-   if (view === SOLVED_VIEW) {
-     lines[lineIndex].resolvedIssues.splice(issueIndex,1);
-   } else {
-     lines[lineIndex].issues.splice(issueIndex,1);
-   }
-
-   render();
- }
-}
-
-function addVisit(lineIndex,issueIndex, view){
-
- openModal(`
- <h2>Add Meeting</h2>
-
- <input id="date" type="date" placeholder="Date">
- <input id="people" placeholder="People">
- <input id="location" placeholder="Location">
- <textarea id="notes" placeholder="Notes"></textarea>
-
- <button onclick="
- saveVisit(${lineIndex},${issueIndex}, '${view}')
- ">
- Save
- </button>
- `);
-
-}
-
-function saveVisit(lineIndex,issueIndex, view){
-
- let issue = view === SOLVED_VIEW ? lines[lineIndex].resolvedIssues[issueIndex] : lines[lineIndex].issues[issueIndex];
-
- if (!issue.visits) issue.visits = [];
-
- issue.visits.push({
-   date:date.value,
-   people:people.value,
-   location:location.value,
-   notes:notes.value
- });
-
- closeModal();
- render();
-}
-
-function viewIssue(lineIndex,issueIndex, view){
-
- let issue = view === SOLVED_VIEW ? lines[lineIndex].resolvedIssues[issueIndex] : lines[lineIndex].issues[issueIndex];
-
- let html=`
- <h2>${issue.title}</h2>
-
- <p><b>ESN:</b> ${issue.esn}</p>
- <p><b>Station:</b> ${issue.station}</p>
- <p><b>Date Found:</b> ${issue.dateFound || 'Not set'}</p>
- <p><b>How issue was found:</b> ${issue.foundHow || 'Not set'}</p>
- <p>${issue.description}</p>
-
- <h3>Meetings</h3>
- `;
-
- if (issue.visits && issue.visits.length) {
-   issue.visits.forEach((visit,index)=>{
-
-   html += `
-   <div class="visit">
-
-   <b>Meeting ${index+1}</b><br><br>
-
-   Date: ${visit.date}<br>
-   People: ${visit.people}<br>
-   Location: ${visit.location}<br>
-   Notes: ${visit.notes}
-
-   <br><br>
-
-   <button onclick="
-   editVisit(${lineIndex},
-             ${issueIndex},
-             ${index}, '${view}')">
-   Edit
-   </button>
-
-   <button onclick="
-   deleteVisit(${lineIndex},
-               ${issueIndex},
-               ${index}, '${view}')">
-   Delete
-   </button>
-
-   </div>
-   `;
-   });
- }
-
- html += `
- <br>
- <button onclick="closeModal()">
- Close
- </button>
- `;
-
- openModal(html);
-}
-
-function moveIssueToSolved(lineIndex, issueIndex){
-  const issue = lines[lineIndex].issues.splice(issueIndex, 1)[0];
-  if (!issue) return;
-  issue.resolvedDate = new Date().toLocaleString();
-  lines[lineIndex].resolvedIssues.push(issue);
-  render();
-}
-
-function moveIssueToCurrent(lineIndex, issueIndex){
-  const issue = lines[lineIndex].resolvedIssues.splice(issueIndex, 1)[0];
-  if (!issue) return;
-  lines[lineIndex].issues.push(issue);
-  render();
-}
-
-function editVisit(lineIndex,issueIndex,visitIndex, view){
-
- let issue = view === SOLVED_VIEW ? lines[lineIndex].resolvedIssues[issueIndex] : lines[lineIndex].issues[issueIndex];
- let visit = issue.visits[visitIndex];
-
- openModal(`
-
- <h2>Edit Meeting</h2>
-
- <input id="date" type="date" value="${visit.date}">
- <input id="people" value="${visit.people}">
- <input id="location" value="${visit.location}">
- <textarea id="notes">${visit.notes}</textarea>
-
- <button onclick="
- saveVisitEdit(
- ${lineIndex},
- ${issueIndex},
- ${visitIndex},
- '${view}'
- )">
- Save
- </button>
-
- `);
-
-}
-
-function saveVisitEdit(
- lineIndex,
- issueIndex,
- visitIndex,
- view
-){
-
- let issue = view === SOLVED_VIEW ? lines[lineIndex].resolvedIssues[issueIndex] : lines[lineIndex].issues[issueIndex];
- let visit = issue.visits[visitIndex];
-
- visit.date=date.value;
- visit.people=people.value;
- visit.location=location.value;
- visit.notes=notes.value;
-
- closeModal();
- render();
-}
-
-function deleteVisit(
- lineIndex,
- issueIndex,
- visitIndex,
- view
-){
-
- let issue = view === SOLVED_VIEW ? lines[lineIndex].resolvedIssues[issueIndex] : lines[lineIndex].issues[issueIndex];
- issue.visits.splice(visitIndex,1);
-
- render();
-}
-
-function matchesQuery(issue, q) {
-  const searchable = [
+function buildSearchableText(issue) {
+  let text = [
     issue.title || '',
     issue.esn || '',
     issue.station || '',
     issue.description || '',
     issue.foundHow || '',
-    issue.dateFound || '',
-    issue.line || '',
-    issue.resolvedDate || ''
-  ];
+    issue.dateFound || ''
+  ].join(' ');
 
-  if (issue.visits && issue.visits.length) {
+  if (issue.visits && Array.isArray(issue.visits)) {
     issue.visits.forEach(visit => {
-      searchable.push(visit.date || '');
-      searchable.push(visit.people || '');
-      searchable.push(visit.location || '');
-      searchable.push(visit.notes || '');
+      text += ' ' + (visit.date || '') + ' ' + (visit.people || '') + ' ' + (visit.location || '') + ' ' + (visit.notes || '');
     });
   }
 
-  const haystack = searchable.join(' ').toLowerCase();
-  return haystack.includes(q);
+  return text.toLowerCase();
 }
 
 function runSearch() {
-  const q = document.getElementById('searchInput').value.trim().toLowerCase();
-  if (!q) {
+  const query = document.getElementById('searchInput').value.trim().toLowerCase();
+  
+  if (!query) {
     searchResults = [];
     renderSearchResults();
     return;
@@ -891,27 +489,31 @@ function runSearch() {
 
   searchResults = [];
 
-  lines.forEach((line) => {
+  lines.forEach((line, lineIndex) => {
+    // Search current issues
     line.issues.forEach((issue, issueIndex) => {
-      if (matchesQuery(issue, q)) {
+      if (buildSearchableText(issue).includes(query)) {
         searchResults.push({
           status: 'Current',
           lineName: line.name,
           lineIndex,
           issueIndex,
-          issue
+          issue,
+          isResolved: false
         });
       }
     });
 
+    // Search resolved issues
     line.resolvedIssues.forEach((issue, issueIndex) => {
-      if (matchesQuery(issue, q)) {
+      if (buildSearchableText(issue).includes(query)) {
         searchResults.push({
           status: 'Resolved',
           lineName: line.name,
           lineIndex,
           issueIndex,
-          issue
+          issue,
+          isResolved: true
         });
       }
     });
@@ -929,46 +531,309 @@ function clearSearch() {
 function renderSearchResults() {
   const container = document.getElementById('searchResults');
 
-  if (!searchResults.length) {
-    container.innerHTML = '<div class="search-empty">No matching issues found. Try searching by ESN, title, description, station, part numbers, or notes.</div>';
+  if (!searchResults || searchResults.length === 0) {
+    container.innerHTML = '<div class="search-empty">No results found. Try searching for an ESN, issue title, description, station, or any note text.</div>';
     return;
   }
 
-  container.innerHTML = searchResults.map((result) => {
+  let html = '';
+  
+  searchResults.forEach((result) => {
     const issue = result.issue;
-    const snippet = (issue.description || issue.foundHow || 'No description available').slice(0, 180);
     const statusClass = result.status === 'Resolved' ? 'resolved' : 'current';
-    const openAction = result.status === 'Resolved'
-      ? `viewIssue(${result.lineIndex}, ${result.issueIndex}, '${SOLVED_VIEW}')`
-      : `viewIssue(${result.lineIndex}, ${result.issueIndex}, '${CURRENT_VIEW}')`;
-
-    return `
+    const openView = result.isResolved ? SOLVED_VIEW : CURRENT_VIEW;
+    const openCmd = `viewIssue(${result.lineIndex}, ${result.issueIndex}, '${openView}')`;
+    
+    html += `
       <div class="search-item">
         <div class="search-item-header">
           <div class="search-status ${statusClass}">${result.status}</div>
-          <div>${result.lineName}</div>
+          <div class="search-line-badge">${result.lineName}</div>
         </div>
-        <div class="search-item-title">${issue.title}</div>
+        <div class="search-item-title">${issue.title || 'No Title'}</div>
         <div class="search-meta">
-          <div><b>ESN:</b> ${issue.esn || 'Not set'}</div>
-          <div><b>Station:</b> ${issue.station || 'Not set'}</div>
-          <div><b>Date Found:</b> ${issue.dateFound || 'Not set'}</div>
-          <div><b>How Found:</b> ${issue.foundHow || 'Not set'}</div>
-          <div><b>Description:</b> ${snippet}</div>
+          <div><b>ESN:</b> ${issue.esn || 'N/A'}</div>
+          <div><b>Station:</b> ${issue.station || 'N/A'}</div>
+          <div><b>Date Found:</b> ${issue.dateFound || 'N/A'}</div>
+          <div><b>How Found:</b> ${issue.foundHow || 'N/A'}</div>
+          <div><b>Description:</b> ${(issue.description || 'N/A').substring(0, 150)}</div>
         </div>
         <div class="search-item-actions">
-          <button onclick="${openAction}">Open Issue</button>
+          <button onclick="${openCmd}">Open Issue</button>
         </div>
       </div>
     `;
-  }).join('');
+  });
+
+  container.innerHTML = html;
 }
 
 document.getElementById('searchInput').addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') {
-    runSearch();
-  }
+  if (e.key === 'Enter') runSearch();
 });
+
+function render(){
+  lines.sort((a,b) => {
+    const aCount = currentView === CURRENT_VIEW ? b.issues.length : b.resolvedIssues.length;
+    const bCount = currentView === CURRENT_VIEW ? a.issues.length : a.resolvedIssues.length;
+    return aCount - bCount;
+  });
+
+  let board = document.getElementById("board");
+  board.innerHTML = "";
+
+  document.getElementById("currentViewButton").classList.toggle("active", currentView === CURRENT_VIEW);
+  document.getElementById("solvedViewButton").classList.toggle("active", currentView === SOLVED_VIEW);
+
+  lines.forEach((line, lineIndex) => {
+    let visibleIssues = currentView === CURRENT_VIEW ? line.issues : line.resolvedIssues;
+
+    let column = document.createElement("div");
+    column.className = "column";
+
+    column.innerHTML = `
+      <div class="column-header ${line.color}">
+        <div class="header-title">${line.name} (${visibleIssues.length})</div>
+        <div class="header-badges">
+          <div class="badge">Current: ${line.issues.length}</div>
+          <div class="badge">Solved: ${line.resolvedIssues.length}</div>
+        </div>
+        <button onclick="addIssue(${lineIndex})">+ Issue</button>
+      </div>
+    `;
+
+    visibleIssues.forEach((issue, issueIndex) => {
+      let card = document.createElement("div");
+      card.className = "card";
+
+      let meetingsHtml = '';
+      if(issue.visits && issue.visits.length > 0){
+        meetingsHtml = '<div class="meetings">';
+        issue.visits.forEach((visit, visitIndex) => {
+          meetingsHtml += `
+            <div class="meeting-item">
+              <div class="meeting-label">Meeting ${visitIndex + 1}</div>
+              <div class="meeting-detail"><b>Date:</b> ${visit.date}</div>
+              <div class="meeting-detail"><b>People:</b> ${visit.people}</div>
+              <div class="meeting-detail"><b>Location:</b> ${visit.location}</div>
+              <div class="meeting-detail"><b>Notes:</b> ${visit.notes}</div>
+            </div>
+          `;
+        });
+        meetingsHtml += '</div>';
+      }
+
+      const isSolvedView = currentView === SOLVED_VIEW;
+
+      card.innerHTML = `
+        <div class="card-title">${issue.title}</div>
+        <div class="card-info">
+          ESN: ${issue.esn}<br>
+          Station: ${issue.station}<br>
+          Date Found: ${issue.dateFound || 'Not set'}<br>
+          Found By: ${issue.foundHow || 'Not set'}
+        </div>
+        ${meetingsHtml}
+        <div class="actions">
+          <button onclick="viewIssue(${lineIndex},${issueIndex}, '${currentView}')">Open</button>
+          <button onclick="editIssue(${lineIndex},${issueIndex}, '${currentView}')">Edit</button>
+          <button onclick="deleteIssue(${lineIndex},${issueIndex}, '${currentView}')">Delete</button>
+          <button onclick="addVisit(${lineIndex},${issueIndex}, '${currentView}')">+ Meeting</button>
+          <button class="${isSolvedView ? 'current-btn' : 'resolve-btn'}" onclick="${isSolvedView ? `moveIssueToCurrent(${lineIndex},${issueIndex})` : `moveIssueToSolved(${lineIndex},${issueIndex})`}">
+            ${isSolvedView ? 'Move to Current' : 'Move to Solved'}
+          </button>
+        </div>
+      `;
+
+      column.appendChild(card);
+    });
+
+    board.appendChild(column);
+  });
+
+  document.getElementById("issueCount").innerText = getTotalCurrentIssues();
+  document.getElementById("resolvedCount").innerText = getTotalResolvedIssues();
+  document.getElementById("visitCount").innerText = getTotalVisits();
+
+  renderSearchResults();
+  saveData();
+}
+
+function openModal(html){
+  document.getElementById("modalContent").innerHTML = html;
+  document.getElementById("modal").style.display = "block";
+}
+
+function closeModal(){
+  document.getElementById("modal").style.display = "none";
+}
+
+function addIssue(lineIndex){
+  openModal(`
+    <h2>New Issue</h2>
+    <input id="title" placeholder="Title">
+    <input id="esn" placeholder="ESN">
+    <input id="station" placeholder="Station">
+    <input id="dateFound" type="date">
+    <textarea id="foundHow" placeholder="How issue was found"></textarea>
+    <textarea id="description" placeholder="Description"></textarea>
+    <button onclick="saveNewIssue(${lineIndex})">Save</button>
+    <button onclick="closeModal()">Cancel</button>
+  `);
+}
+
+function saveNewIssue(lineIndex){
+  lines[lineIndex].issues.push({
+    title: title.value,
+    esn: esn.value,
+    station: station.value,
+    dateFound: dateFound.value,
+    foundHow: foundHow.value,
+    description: description.value,
+    visits: []
+  });
+  closeModal();
+  render();
+}
+
+function editIssue(lineIndex, issueIndex, view){
+  let issue = view === SOLVED_VIEW ? lines[lineIndex].resolvedIssues[issueIndex] : lines[lineIndex].issues[issueIndex];
+  openModal(`
+    <h2>Edit Issue</h2>
+    <input id="title" value="${issue.title}">
+    <input id="esn" value="${issue.esn}">
+    <input id="station" value="${issue.station}">
+    <input id="dateFound" type="date" value="${issue.dateFound || ''}">
+    <textarea id="foundHow">${issue.foundHow || ''}</textarea>
+    <textarea id="description">${issue.description}</textarea>
+    <button onclick="updateIssue(${lineIndex},${issueIndex}, '${view}')">Save</button>
+  `);
+}
+
+function updateIssue(lineIndex, issueIndex, view){
+  let issue = view === SOLVED_VIEW ? lines[lineIndex].resolvedIssues[issueIndex] : lines[lineIndex].issues[issueIndex];
+  issue.title = title.value;
+  issue.esn = esn.value;
+  issue.station = station.value;
+  issue.dateFound = dateFound.value;
+  issue.foundHow = foundHow.value;
+  issue.description = description.value;
+  closeModal();
+  render();
+}
+
+function deleteIssue(lineIndex, issueIndex, view){
+  if(confirm("Delete issue?")){
+    if (view === SOLVED_VIEW) {
+      lines[lineIndex].resolvedIssues.splice(issueIndex,1);
+    } else {
+      lines[lineIndex].issues.splice(issueIndex,1);
+    }
+    render();
+  }
+}
+
+function addVisit(lineIndex, issueIndex, view){
+  openModal(`
+    <h2>Add Meeting</h2>
+    <input id="date" type="date">
+    <input id="people" placeholder="People">
+    <input id="location" placeholder="Location">
+    <textarea id="notes" placeholder="Notes"></textarea>
+    <button onclick="saveVisit(${lineIndex},${issueIndex}, '${view}')">Save</button>
+  `);
+}
+
+function saveVisit(lineIndex, issueIndex, view){
+  let issue = view === SOLVED_VIEW ? lines[lineIndex].resolvedIssues[issueIndex] : lines[lineIndex].issues[issueIndex];
+  if (!issue.visits) issue.visits = [];
+  issue.visits.push({
+    date: date.value,
+    people: people.value,
+    location: location.value,
+    notes: notes.value
+  });
+  closeModal();
+  render();
+}
+
+function viewIssue(lineIndex, issueIndex, view){
+  let issue = view === SOLVED_VIEW ? lines[lineIndex].resolvedIssues[issueIndex] : lines[lineIndex].issues[issueIndex];
+  let html = `
+    <h2>${issue.title}</h2>
+    <p><b>ESN:</b> ${issue.esn}</p>
+    <p><b>Station:</b> ${issue.station}</p>
+    <p><b>Date Found:</b> ${issue.dateFound || 'Not set'}</p>
+    <p><b>How issue was found:</b> ${issue.foundHow || 'Not set'}</p>
+    <p>${issue.description}</p>
+    <h3>Meetings</h3>
+  `;
+
+  if (issue.visits && issue.visits.length) {
+    issue.visits.forEach((visit, index) => {
+      html += `
+        <div class="visit">
+          <b>Meeting ${index+1}</b><br><br>
+          Date: ${visit.date}<br>
+          People: ${visit.people}<br>
+          Location: ${visit.location}<br>
+          Notes: ${visit.notes}
+          <br><br>
+          <button onclick="editVisit(${lineIndex}, ${issueIndex}, ${index}, '${view}')">Edit</button>
+          <button onclick="deleteVisit(${lineIndex}, ${issueIndex}, ${index}, '${view}')">Delete</button>
+        </div>
+      `;
+    });
+  }
+
+  html += '<br><button onclick="closeModal()">Close</button>';
+  openModal(html);
+}
+
+function moveIssueToSolved(lineIndex, issueIndex){
+  const issue = lines[lineIndex].issues.splice(issueIndex, 1)[0];
+  if (!issue) return;
+  issue.resolvedDate = new Date().toLocaleString();
+  lines[lineIndex].resolvedIssues.push(issue);
+  render();
+}
+
+function moveIssueToCurrent(lineIndex, issueIndex){
+  const issue = lines[lineIndex].resolvedIssues.splice(issueIndex, 1)[0];
+  if (!issue) return;
+  lines[lineIndex].issues.push(issue);
+  render();
+}
+
+function editVisit(lineIndex, issueIndex, visitIndex, view){
+  let issue = view === SOLVED_VIEW ? lines[lineIndex].resolvedIssues[issueIndex] : lines[lineIndex].issues[issueIndex];
+  let visit = issue.visits[visitIndex];
+  openModal(`
+    <h2>Edit Meeting</h2>
+    <input id="date" type="date" value="${visit.date}">
+    <input id="people" value="${visit.people}">
+    <input id="location" value="${visit.location}">
+    <textarea id="notes">${visit.notes}</textarea>
+    <button onclick="saveVisitEdit(${lineIndex}, ${issueIndex}, ${visitIndex}, '${view}')">Save</button>
+  `);
+}
+
+function saveVisitEdit(lineIndex, issueIndex, visitIndex, view){
+  let issue = view === SOLVED_VIEW ? lines[lineIndex].resolvedIssues[issueIndex] : lines[lineIndex].issues[issueIndex];
+  let visit = issue.visits[visitIndex];
+  visit.date = date.value;
+  visit.people = people.value;
+  visit.location = location.value;
+  visit.notes = notes.value;
+  closeModal();
+  render();
+}
+
+function deleteVisit(lineIndex, issueIndex, visitIndex, view){
+  let issue = view === SOLVED_VIEW ? lines[lineIndex].resolvedIssues[issueIndex] : lines[lineIndex].issues[issueIndex];
+  issue.visits.splice(visitIndex, 1);
+  render();
+}
 
 render();
 
