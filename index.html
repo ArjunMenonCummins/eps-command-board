@@ -12,17 +12,29 @@
  --orange:#F58220;
  --yellow:#FFD100;
  --green:#4CAF50;
+ --panel:#f1f1f1;
+ --dark:#1d1d1d;
+ --muted:#666;
+ --border:#bdbdbd;
+ --shadow:0 1px 0 rgba(0,0,0,0.06);
 }
 
-body{
+*{ box-sizing:border-box; }
+
+html,body{
  margin:0;
+ padding:0;
  font-family:Segoe UI,sans-serif;
  background:#fff;
  color:#222;
 }
 
+body{
+ min-height:100vh;
+}
+
 .header{
- padding:20px;
+ padding:20px 16px 12px 16px;
  border-bottom:1px solid #ddd;
 }
 
@@ -30,53 +42,78 @@ body{
  display:flex;
  justify-content:space-between;
  align-items:center;
- gap:20px;
+ gap:16px;
  flex-wrap:wrap;
 }
 
-.view-toggle{
- display:flex;
- gap:10px;
+h1{
+ margin:0;
+ font-size:clamp(2rem, 2.4vw, 3rem);
+ letter-spacing:0.04em;
+ font-weight:800;
 }
 
-.view-toggle button,
-.search-actions button{
+.stats{
+ display:flex;
+ gap:12px;
+ margin-top:14px;
+ flex-wrap:wrap;
+}
+
+.stat{
+ background:#f5f5f5;
  padding:10px 16px;
- font-weight:bold;
+ border-radius:8px;
+ border:1px solid #ddd;
+ font-size:14px;
 }
 
 .search-wrap{
  display:flex;
- gap:10px;
- margin-top:18px;
+ gap:12px;
  align-items:center;
+ margin-top:18px;
  flex-wrap:wrap;
 }
 
 .search-box{
- flex:1;
- min-width:300px;
- padding:14px 16px;
+ flex:1 1 700px;
+ min-width:220px;
+ width:100%;
+ max-width:none;
+ padding:13px 14px;
  font-size:15px;
  border:2px solid #222;
  border-radius:8px;
- font-weight:bold;
+ background:white;
 }
 
-.search-box::placeholder{
- font-weight:normal;
+.search-box::placeholder{ color:#727272; }
+
+.search-actions{
+ display:flex;
+ gap:8px;
+}
+
+.search-actions button,
+.badge-btn,
+.column-add-btn,
+.card-button{
+ font-size:13px;
+ border-radius:6px;
+ border:1px solid #222;
+ cursor:pointer;
 }
 
 .search-actions button{
- padding:12px 20px;
+ padding:11px 18px;
  background:#222;
  color:white;
- font-size:13px;
+ border:1px solid #222;
+ font-weight:700;
 }
 
-.search-actions button:hover{
- background:#333;
-}
+.search-actions button:hover{ background:#333; }
 
 .search-panel{
  margin-top:20px;
@@ -84,7 +121,7 @@ body{
  border:2px solid #222;
  border-radius:10px;
  padding:16px;
- max-height:500px;
+ max-height:420px;
  overflow-y:auto;
 }
 
@@ -93,11 +130,7 @@ body{
  font-size:18px;
 }
 
-.search-results{
- display:flex;
- flex-direction:column;
- gap:12px;
-}
+.search-results{ display:flex; flex-direction:column; gap:12px; }
 
 .search-item{
  background:white;
@@ -118,20 +151,13 @@ body{
 .search-status{
  font-weight:bold;
  padding:6px 12px;
- border-radius:20px;
+ border-radius:18px;
  font-size:12px;
  white-space:nowrap;
 }
 
-.search-status.current{
- background:#dfeeff;
- color:#0c4ca3;
-}
-
-.search-status.resolved{
- background:#dff7e8;
- color:#1d6e3b;
-}
+.search-status.current{ background:#dfeeff; color:#0c4ca3; }
+.search-status.resolved{ background:#dff7e8; color:#1d6e3b; }
 
 .search-line-badge{
  background:#222;
@@ -146,7 +172,6 @@ body{
  font-size:16px;
  font-weight:bold;
  margin-bottom:8px;
- color:#222;
 }
 
 .search-meta{
@@ -155,23 +180,15 @@ body{
  line-height:1.8;
 }
 
-.search-meta div{
- margin-bottom:4px;
-}
+.search-meta div{ margin-bottom:4px; }
 
-.search-item-actions{
- margin-top:12px;
-}
-
+.search-item-actions{ margin-top:12px; }
 .search-item-actions button{
  background:#222;
  color:white;
  padding:10px 16px;
  font-weight:bold;
-}
-
-.search-item-actions button:hover{
- background:#333;
+ border:1px solid #222;
 }
 
 .search-empty{
@@ -183,87 +200,80 @@ body{
  text-align:center;
 }
 
-.stats{
- display:flex;
- gap:15px;
- margin-top:10px;
- flex-wrap:wrap;
-}
-
-.stat{
- background:#f5f5f5;
- padding:10px 18px;
- border-radius:8px;
- border:1px solid #ddd;
+.board-wrap{
+ padding:0 16px 18px 16px;
 }
 
 .board{
  display:flex;
  gap:15px;
- padding:15px;
- overflow-x:auto;
+ flex-wrap:wrap;
  align-items:flex-start;
+ width:100%;
 }
 
 .column{
- min-width:350px;
- border:1px solid #ddd;
- border-radius:10px;
+ flex:1 1 min(24%, 380px);
+ min-width:250px;
+ max-width:100%;
+ border:1px solid #d3d3d3;
+ border-radius:12px;
  background:#fafafa;
+ overflow:hidden;
 }
 
 .column-header{
- padding:12px;
+ padding:12px 10px;
  color:white;
  font-weight:bold;
  display:flex;
  justify-content:space-between;
  align-items:center;
- gap:10px;
+ gap:8px;
+ flex-wrap:wrap;
 }
 
 .header-title{
- flex:1;
+ font-size:18px;
+ font-weight:800;
 }
 
 .header-badges{
  display:flex;
  gap:8px;
- font-size:12px;
+ flex-wrap:wrap;
 }
 
 .badge-btn{
- background:rgba(255,255,255,0.28);
+ background:rgba(255,255,255,0.24);
+ border:1px solid rgba(255,255,255,0.7);
  color:white;
- border:none;
  padding:6px 10px;
- border-radius:6px;
- cursor:pointer;
- font-weight:bold;
+ font-weight:700;
 }
 
 .badge-btn.active{
- background:rgba(0,0,0,0.23);
- border:1px solid rgba(255,255,255,0.9);
+ background:rgba(0,0,0,0.18);
+ box-shadow:inset 0 0 0 1px rgba(255,255,255,0.7);
 }
 
-.badge-btn[data-status="current"]{ color:white; }
-.badge-btn[data-status="solved"]{ color:white; }
-
-.red{background:var(--red);}
-.orange{background:var(--orange);}
-.yellow{
- background:var(--yellow);
- color:black;
+.column-add-btn{
+ background:#fff;
+ color:#222;
+ border:1px solid rgba(0,0,0,0.2);
+ padding:6px 10px;
+ font-weight:700;
 }
-.green{background:var(--green);}
+
+.column-body{ padding:6px 10px 10px 10px; }
 
 .card{
  background:white;
- margin:10px;
+ margin:10px 0;
  border:1px solid #ddd;
  border-radius:8px;
  padding:10px;
+ box-shadow:var(--shadow);
 }
 
 .card-title{
@@ -275,6 +285,7 @@ body{
  font-size:14px;
  margin-bottom:8px;
  color:#555;
+ line-height:1.5;
 }
 
 .meetings{
@@ -287,58 +298,25 @@ body{
  background:#f9f9f9;
  padding:8px;
  margin:5px 0;
- border-radius:4px;
+ border-radius:6px;
  font-size:12px;
  border-left:3px solid var(--orange);
 }
 
-.meeting-label{
- font-weight:bold;
- color:#333;
-}
+.meeting-label{ font-weight:bold; }
+.meeting-detail{ color:#666; margin-top:3px; }
 
-.meeting-detail{
- color:#666;
- margin-top:3px;
-}
+.actions{ display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
 
-.actions{
- display:flex;
- gap:5px;
- flex-wrap:wrap;
- margin-top:10px;
-}
-
-button{
- cursor:pointer;
- border:none;
- padding:8px 12px;
- border-radius:6px;
+.card-button{
+ padding:7px 10px;
  background:#ececec;
- font-size:12px;
+ border:1px solid #d7d7d7;
+ color:#222;
 }
 
-button:hover{
- background:#ddd;
-}
-
-.resolve-btn{
- background:#4CAF50;
- color:white;
-}
-
-.resolve-btn:hover{
- background:#45a049;
-}
-
-.current-btn{
- background:#2d6cdf;
- color:white;
-}
-
-.current-btn:hover{
- background:#2458b5;
-}
+.card-button.green{ background:#4CAF50; color:white; border-color:#4CAF50; }
+.card-button.blue{ background:#2d6cdf; color:white; border-color:#2d6cdf; }
 
 .modal{
  display:none;
@@ -370,47 +348,73 @@ input,textarea{
  padding:10px;
  border-left:4px solid var(--red);
 }
+
+.empty-state{
+ background:#f8f8f8;
+ border:1px solid #ddd;
+ border-radius:8px;
+ padding:18px;
+ text-align:center;
+ color:#666;
+ margin:10px 0;
+}
+
+.red{background:var(--red);} .orange{background:var(--orange);} .yellow{background:var(--yellow); color:#111;} .green{background:var(--green);}
+
+@media (max-width: 1024px){
+  .column{ flex:1 1 45%; }
+}
+
+@media (max-width: 720px){
+  .header{ padding:16px 12px 10px 12px; }
+  .board-wrap{ padding:0 12px 14px 12px; }
+  .search-wrap{ flex-direction:column; align-items:stretch; }
+  .search-actions{ width:100%; }
+  .search-actions button{ flex:1; }
+  .column{ flex:1 1 100%; min-width:0; }
+  .header-badges{ width:100%; }
+  .badge-btn{ flex:1; }
+}
 </style>
 </head>
 <body>
 
 <div class="header">
+  <div class="header-top">
+    <h1>EPS COMMAND BOARD</h1>
+  </div>
 
-<div class="header-top">
-  <h1>EPS COMMAND BOARD</h1>
-</div>
+  <div class="stats">
+    <div class="stat">Current Issues: <span id="issueCount">0</span></div>
+    <div class="stat">Issues Resolved: <span id="resolvedCount">0</span></div>
+    <div class="stat">Visits This Week: <span id="visitCount">0</span></div>
+  </div>
 
-<div class="stats">
-<div class="stat">Current Issues: <span id="issueCount">0</span></div>
-<div class="stat">Issues Resolved: <span id="resolvedCount">0</span></div>
-<div class="stat">Visits This Week: <span id="visitCount">0</span></div>
-</div>
+  <div class="search-wrap">
+    <input id="searchInput" class="search-box" type="text" placeholder="🔍 Search everything (ESN, title, description, notes...)" />
+    <div class="search-actions">
+      <button onclick="runSearch()">Search</button>
+      <button onclick="clearSearch()">Clear</button>
+    </div>
+  </div>
 
-<div class="search-wrap">
-  <input id="searchInput" class="search-box" type="text" placeholder="🔍 Search everything (ESN, title, description, notes...)" />
-  <div class="search-actions">
-    <button onclick="runSearch()">Search</button>
-    <button onclick="clearSearch()">Clear</button>
+  <div class="search-panel">
+    <h3>📋 Search Results</h3>
+    <div id="searchResults" class="search-results"></div>
   </div>
 </div>
 
-<div class="search-panel">
-  <h3>📋 Search Results</h3>
-  <div id="searchResults" class="search-results"></div>
+<div class="board-wrap">
+  <div id="board" class="board"></div>
 </div>
-
-</div>
-
-<div id="board" class="board"></div>
 
 <div id="modal" class="modal">
-<div class="modal-content">
-<div id="modalContent"></div>
-</div>
+  <div class="modal-content">
+    <div id="modalContent"></div>
+  </div>
 </div>
 
 <script>
-
 const CURRENT_VIEW = "current";
 const SOLVED_VIEW = "solved";
 const ALL_VIEW = "all";
@@ -426,7 +430,7 @@ let lines = JSON.parse(localStorage.getItem("epsLines")) || [
   { name:"15L", color:"green", issues:[], resolvedIssues:[] }
 ];
 
-function normalizeLines() {
+function normalizeLines(){
   lines = lines.map(line => ({
     name: line.name,
     color: line.color,
@@ -441,12 +445,11 @@ function saveData(){
   localStorage.setItem("epsLines", JSON.stringify(lines));
   localStorage.setItem("epsActiveFilter", activeFilter);
   localStorage.setItem("epsActiveLine", activeLine || "");
-
   const flattenedResolved = lines.flatMap(line => line.resolvedIssues.map(issue => ({ ...issue, line: line.name })));
   localStorage.setItem("epsResolvedIssues", JSON.stringify(flattenedResolved));
 }
 
-function buildSearchableText(issue) {
+function buildSearchableText(issue){
   let text = [
     issue.title || '',
     issue.esn || '',
@@ -465,7 +468,7 @@ function buildSearchableText(issue) {
   return text.toLowerCase();
 }
 
-function runSearch() {
+function runSearch(){
   const query = document.getElementById('searchInput').value.trim().toLowerCase();
   if (!query) {
     searchResults = [];
@@ -478,13 +481,13 @@ function runSearch() {
   lines.forEach((line, lineIndex) => {
     line.issues.forEach((issue, issueIndex) => {
       if (buildSearchableText(issue).includes(query)) {
-        searchResults.push({ status: 'Current', lineName: line.name, lineIndex, issueIndex, issue, isResolved: false });
+        searchResults.push({ status:'Current', lineName:line.name, lineIndex, issueIndex, issue, isResolved:false });
       }
     });
 
     line.resolvedIssues.forEach((issue, issueIndex) => {
       if (buildSearchableText(issue).includes(query)) {
-        searchResults.push({ status: 'Resolved', lineName: line.name, lineIndex, issueIndex, issue, isResolved: true });
+        searchResults.push({ status:'Resolved', lineName:line.name, lineIndex, issueIndex, issue, isResolved:true });
       }
     });
   });
@@ -492,15 +495,14 @@ function runSearch() {
   renderSearchResults();
 }
 
-function clearSearch() {
+function clearSearch(){
   document.getElementById('searchInput').value = '';
   searchResults = [];
   renderSearchResults();
 }
 
-function renderSearchResults() {
+function renderSearchResults(){
   const container = document.getElementById('searchResults');
-
   if (!searchResults || searchResults.length === 0) {
     container.innerHTML = '<div class="search-empty">No results found. Try searching for an ESN, issue title, description, station, or any note text.</div>';
     return;
@@ -525,7 +527,7 @@ function renderSearchResults() {
           <div><b>Station:</b> ${issue.station || 'N/A'}</div>
           <div><b>Date Found:</b> ${issue.dateFound || 'N/A'}</div>
           <div><b>How Found:</b> ${issue.foundHow || 'N/A'}</div>
-          <div><b>Description:</b> ${(issue.description || 'N/A').substring(0, 150)}</div>
+          <div><b>Description:</b> ${(issue.description || 'N/A').substring(0,150)}</div>
         </div>
         <div class="search-item-actions">
           <button onclick="${openCmd}">Open Issue</button>
@@ -537,17 +539,15 @@ function renderSearchResults() {
   container.innerHTML = html;
 }
 
-document.getElementById('searchInput').addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') runSearch();
-});
+document.getElementById('searchInput').addEventListener('keydown', function(e){ if (e.key === 'Enter') runSearch(); });
 
-function getVisibleIssues(line) {
-  if (activeFilter === CURRENT_VIEW) return line.issues;
-  if (activeFilter === SOLVED_VIEW) return line.resolvedIssues;
-  return [...line.issues, ...line.resolvedIssues];
+function getTotalCurrentIssues(){ return lines.reduce((total, line) => total + line.issues.length, 0); }
+function getTotalResolvedIssues(){ return lines.reduce((total, line) => total + line.resolvedIssues.length, 0); }
+function getTotalVisits(){
+  return lines.reduce((total, line) => total + line.issues.reduce((sum, issue) => sum + (issue.visits ? issue.visits.length : 0), 0) + line.resolvedIssues.reduce((sum, issue) => sum + (issue.visits ? issue.visits.length : 0), 0), 0);
 }
 
-function toggleFilter(lineName, status) {
+function toggleFilter(lineName, status){
   if (activeLine === lineName && activeFilter === status) {
     activeLine = null;
     activeFilter = ALL_VIEW;
@@ -558,7 +558,7 @@ function toggleFilter(lineName, status) {
   render();
 }
 
-function getLineDisplayIssues(line) {
+function getFilteredLineIssues(line) {
   if (activeLine && activeLine !== line.name) return [];
   if (activeFilter === CURRENT_VIEW) return line.issues;
   if (activeFilter === SOLVED_VIEW) return line.resolvedIssues;
@@ -566,107 +566,105 @@ function getLineDisplayIssues(line) {
 }
 
 function render(){
-  const filteredLines = lines.map(line => ({
-    ...line,
-    visibleIssues: getLineDisplayIssues(line)
-  }));
+  let board = document.getElementById('board');
+  board.innerHTML = '';
 
-  let board = document.getElementById("board");
-  board.innerHTML = "";
+  lines.forEach((line, lineIndex) => {
+    const filteredIssues = getFilteredLineIssues(line);
+    const column = document.createElement('div');
+    column.className = 'column';
 
-  filteredLines.forEach((line, lineIndex) => {
-    let column = document.createElement("div");
-    column.className = "column";
+    const currentButtonClass = activeLine === line.name && activeFilter === CURRENT_VIEW ? 'active' : '';
+    const solvedButtonClass = activeLine === line.name && activeFilter === SOLVED_VIEW ? 'active' : '';
 
-    column.innerHTML = `
+    const columnHeader = `
       <div class="column-header ${line.color}">
         <div class="header-title">${line.name}</div>
         <div class="header-badges">
-          <button class="badge-btn ${activeLine === line.name && activeFilter === CURRENT_VIEW ? 'active' : ''}" data-status="current" onclick="toggleFilter('${line.name}', '${CURRENT_VIEW}')">Current: ${line.issues.length}</button>
-          <button class="badge-btn ${activeLine === line.name && activeFilter === SOLVED_VIEW ? 'active' : ''}" data-status="solved" onclick="toggleFilter('${line.name}', '${SOLVED_VIEW}')">Solved: ${line.resolvedIssues.length}</button>
+          <button class="badge-btn ${currentButtonClass}" onclick="toggleFilter('${line.name}', '${CURRENT_VIEW}')">Current: ${line.issues.length}</button>
+          <button class="badge-btn ${solvedButtonClass}" onclick="toggleFilter('${line.name}', '${SOLVED_VIEW}')">Solved: ${line.resolvedIssues.length}</button>
         </div>
-        <button onclick="addIssue(${lineIndex})">+ Issue</button>
+        <button class="column-add-btn" onclick="addIssue(${lineIndex})">+ Issue</button>
       </div>
     `;
 
-    const visibleIssues = line.visibleIssues;
-    if (!visibleIssues || visibleIssues.length === 0) {
+    const body = document.createElement('div');
+    body.className = 'column-body';
+
+    if (!filteredIssues || filteredIssues.length === 0) {
       const empty = document.createElement('div');
-      empty.className = 'card';
-      empty.innerHTML = '<div class="card-info">No items in this view.</div>';
-      column.appendChild(empty);
-      board.appendChild(column);
-      return;
+      empty.className = 'empty-state';
+      empty.textContent = 'No items in this view.';
+      body.appendChild(empty);
+    } else {
+      filteredIssues.forEach((issue) => {
+        const issueType = line.issues.includes(issue) ? CURRENT_VIEW : SOLVED_VIEW;
+        const issueIndex = issueType === CURRENT_VIEW ? line.issues.indexOf(issue) : line.resolvedIssues.indexOf(issue);
+
+        const card = document.createElement('div');
+        card.className = 'card';
+
+        let meetingsHtml = '';
+        if (issue.visits && issue.visits.length > 0) {
+          meetingsHtml = '<div class="meetings">';
+          issue.visits.forEach((visit, visitIndex) => {
+            meetingsHtml += `
+              <div class="meeting-item">
+                <div class="meeting-label">Meeting ${visitIndex + 1}</div>
+                <div class="meeting-detail"><b>Date:</b> ${visit.date}</div>
+                <div class="meeting-detail"><b>People:</b> ${visit.people}</div>
+                <div class="meeting-detail"><b>Location:</b> ${visit.location}</div>
+                <div class="meeting-detail"><b>Notes:</b> ${visit.notes}</div>
+              </div>
+            `;
+          });
+          meetingsHtml += '</div>';
+        }
+
+        const isSolvedView = issueType === SOLVED_VIEW;
+
+        card.innerHTML = `
+          <div class="card-title">${issue.title}</div>
+          <div class="card-info">
+            ESN: ${issue.esn}<br>
+            Station: ${issue.station}<br>
+            Date Found: ${issue.dateFound || 'Not set'}<br>
+            Found By: ${issue.foundHow || 'Not set'}
+          </div>
+          ${meetingsHtml}
+          <div class="actions">
+            <button class="card-button" onclick="viewIssue(${lineIndex},${issueIndex}, '${issueType}')">Open</button>
+            <button class="card-button" onclick="editIssue(${lineIndex},${issueIndex}, '${issueType}')">Edit</button>
+            <button class="card-button" onclick="deleteIssue(${lineIndex},${issueIndex}, '${issueType}')">Delete</button>
+            <button class="card-button" onclick="addVisit(${lineIndex},${issueIndex}, '${issueType}')">+ Meeting</button>
+            <button class="card-button ${isSolvedView ? 'blue' : 'green'}" onclick="${isSolvedView ? `moveIssueToCurrent(${lineIndex},${issueIndex})` : `moveIssueToSolved(${lineIndex},${issueIndex})`}">${isSolvedView ? 'Move to Current' : 'Move to Solved'}</button>
+          </div>
+        `;
+
+        body.appendChild(card);
+      });
     }
 
-    visibleIssues.forEach((issue, idx) => {
-      let card = document.createElement("div");
-      card.className = "card";
-
-      const issueType = line.issues.includes(issue) ? CURRENT_VIEW : SOLVED_VIEW;
-      const issueIndex = issueType === CURRENT_VIEW ? line.issues.indexOf(issue) : line.resolvedIssues.indexOf(issue);
-
-      let meetingsHtml = '';
-      if(issue.visits && issue.visits.length > 0){
-        meetingsHtml = '<div class="meetings">';
-        issue.visits.forEach((visit, visitIndex) => {
-          meetingsHtml += `
-            <div class="meeting-item">
-              <div class="meeting-label">Meeting ${visitIndex + 1}</div>
-              <div class="meeting-detail"><b>Date:</b> ${visit.date}</div>
-              <div class="meeting-detail"><b>People:</b> ${visit.people}</div>
-              <div class="meeting-detail"><b>Location:</b> ${visit.location}</div>
-              <div class="meeting-detail"><b>Notes:</b> ${visit.notes}</div>
-            </div>
-          `;
-        });
-        meetingsHtml += '</div>';
-      }
-
-      const isSolvedView = issueType === SOLVED_VIEW;
-
-      card.innerHTML = `
-        <div class="card-title">${issue.title}</div>
-        <div class="card-info">
-          ESN: ${issue.esn}<br>
-          Station: ${issue.station}<br>
-          Date Found: ${issue.dateFound || 'Not set'}<br>
-          Found By: ${issue.foundHow || 'Not set'}
-        </div>
-        ${meetingsHtml}
-        <div class="actions">
-          <button onclick="viewIssue(${lineIndex},${issueIndex}, '${issueType}')">Open</button>
-          <button onclick="editIssue(${lineIndex},${issueIndex}, '${issueType}')">Edit</button>
-          <button onclick="deleteIssue(${lineIndex},${issueIndex}, '${issueType}')">Delete</button>
-          <button onclick="addVisit(${lineIndex},${issueIndex}, '${issueType}')">+ Meeting</button>
-          <button class="${isSolvedView ? 'current-btn' : 'resolve-btn'}" onclick="${isSolvedView ? `moveIssueToCurrent(${lineIndex},${issueIndex})` : `moveIssueToSolved(${lineIndex},${issueIndex})`}">
-            ${isSolvedView ? 'Move to Current' : 'Move to Solved'}
-          </button>
-        </div>
-      `;
-
-      column.appendChild(card);
-    });
-
+    column.innerHTML = columnHeader;
+    column.appendChild(body);
     board.appendChild(column);
   });
 
-  document.getElementById("issueCount").innerText = getTotalCurrentIssues();
-  document.getElementById("resolvedCount").innerText = getTotalResolvedIssues();
-  document.getElementById("visitCount").innerText = getTotalVisits();
-
+  document.getElementById('issueCount').innerText = getTotalCurrentIssues();
+  document.getElementById('resolvedCount').innerText = getTotalResolvedIssues();
+  document.getElementById('visitCount').innerText = getTotalVisits();
   renderSearchResults();
   saveData();
 }
 
-function getTotalCurrentIssues(){ return lines.reduce((total, line) => total + line.issues.length, 0); }
-function getTotalResolvedIssues(){ return lines.reduce((total, line) => total + line.resolvedIssues.length, 0); }
-function getTotalVisits(){
-  return lines.reduce((total, line) => total + line.issues.reduce((sum, issue) => sum + (issue.visits ? issue.visits.length : 0), 0) + line.resolvedIssues.reduce((sum, issue) => sum + (issue.visits ? issue.visits.length : 0), 0), 0);
+function openModal(html){
+  document.getElementById('modalContent').innerHTML = html;
+  document.getElementById('modal').style.display = 'block';
 }
 
-function openModal(html){ document.getElementById("modalContent").innerHTML = html; document.getElementById("modal").style.display = "block"; }
-function closeModal(){ document.getElementById("modal").style.display = "none"; }
+function closeModal(){
+  document.getElementById('modal').style.display = 'none';
+}
 
 function addIssue(lineIndex){
   openModal(`
@@ -684,13 +682,13 @@ function addIssue(lineIndex){
 
 function saveNewIssue(lineIndex){
   lines[lineIndex].issues.push({
-    title: title.value,
-    esn: esn.value,
-    station: station.value,
-    dateFound: dateFound.value,
-    foundHow: foundHow.value,
-    description: description.value,
-    visits: []
+    title:title.value,
+    esn:esn.value,
+    station:station.value,
+    dateFound:dateFound.value,
+    foundHow:foundHow.value,
+    description:description.value,
+    visits:[]
   });
   closeModal();
   render();
@@ -723,12 +721,9 @@ function updateIssue(lineIndex, issueIndex, view){
 }
 
 function deleteIssue(lineIndex, issueIndex, view){
-  if(confirm("Delete issue?")){
-    if (view === SOLVED_VIEW) {
-      lines[lineIndex].resolvedIssues.splice(issueIndex,1);
-    } else {
-      lines[lineIndex].issues.splice(issueIndex,1);
-    }
+  if (confirm('Delete issue?')) {
+    if (view === SOLVED_VIEW) lines[lineIndex].resolvedIssues.splice(issueIndex, 1);
+    else lines[lineIndex].issues.splice(issueIndex, 1);
     render();
   }
 }
@@ -748,10 +743,10 @@ function saveVisit(lineIndex, issueIndex, view){
   let issue = view === SOLVED_VIEW ? lines[lineIndex].resolvedIssues[issueIndex] : lines[lineIndex].issues[issueIndex];
   if (!issue.visits) issue.visits = [];
   issue.visits.push({
-    date: date.value,
-    people: people.value,
-    location: location.value,
-    notes: notes.value
+    date:date.value,
+    people:people.value,
+    location:location.value,
+    notes:notes.value
   });
   closeModal();
   render();
@@ -770,15 +765,14 @@ function viewIssue(lineIndex, issueIndex, view){
   `;
 
   if (issue.visits && issue.visits.length) {
-    issue.visits.forEach((visit, index) => {
+    issue.visits.forEach((visit,index) => {
       html += `
         <div class="visit">
-          <b>Meeting ${index+1}</b><br><br>
+          <b>Meeting ${index + 1}</b><br><br>
           Date: ${visit.date}<br>
           People: ${visit.people}<br>
           Location: ${visit.location}<br>
-          Notes: ${visit.notes}
-          <br><br>
+          Notes: ${visit.notes}<br><br>
           <button onclick="editVisit(${lineIndex}, ${issueIndex}, ${index}, '${view}')">Edit</button>
           <button onclick="deleteVisit(${lineIndex}, ${issueIndex}, ${index}, '${view}')">Delete</button>
         </div>
@@ -836,7 +830,6 @@ function deleteVisit(lineIndex, issueIndex, visitIndex, view){
 }
 
 render();
-
 </script>
 
 </body>
