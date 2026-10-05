@@ -68,6 +68,13 @@ h1{
  font-size:14px;
 }
 
+.stat.flagged{
+ background:#ffe0e0;
+ border-color:#ff6b6b;
+ font-weight:bold;
+ color:#d9241c;
+}
+
 .search-wrap{
  display:flex;
  gap:12px;
@@ -276,6 +283,11 @@ h1{
  box-shadow:var(--shadow);
 }
 
+.card.flagged{
+ border:2px solid #ff6b6b;
+ background:#fffafa;
+}
+
 .card-title{
  font-weight:bold;
  margin-bottom:8px;
@@ -317,6 +329,8 @@ h1{
 
 .card-button.green{ background:#4CAF50; color:white; border-color:#4CAF50; }
 .card-button.blue{ background:#2d6cdf; color:white; border-color:#2d6cdf; }
+.card-button.flag{ background:#ff6b6b; color:white; border-color:#ff6b6b; }
+.card-button.flag.flagged{ background:#ffb3b3; }
 
 .modal{
  display:none;
@@ -387,6 +401,7 @@ input,textarea{
   <div class="stats">
     <div class="stat">Current Issues: <span id="issueCount">0</span></div>
     <div class="stat">Issues Resolved: <span id="resolvedCount">0</span></div>
+    <div class="stat flagged">🚨 Flagged Issues: <span id="flaggedCount">0</span></div>
     <div class="stat">Visits This Week: <span id="visitCount">0</span></div>
   </div>
 
@@ -543,6 +558,9 @@ document.getElementById('searchInput').addEventListener('keydown', function(e){ 
 
 function getTotalCurrentIssues(){ return lines.reduce((total, line) => total + line.issues.length, 0); }
 function getTotalResolvedIssues(){ return lines.reduce((total, line) => total + line.resolvedIssues.length, 0); }
+function getTotalFlaggedIssues(){
+  return lines.reduce((total, line) => total + line.issues.filter(issue => issue.flagged).length, 0);
+}
 function getTotalVisits(){
   return lines.reduce((total, line) => total + line.issues.reduce((sum, issue) => sum + (issue.visits ? issue.visits.length : 0), 0) + line.resolvedIssues.reduce((sum, issue) => sum + (issue.visits ? issue.visits.length : 0), 0), 0);
 }
@@ -563,6 +581,12 @@ function getFilteredLineIssues(line) {
   if (activeFilter === CURRENT_VIEW) return line.issues;
   if (activeFilter === SOLVED_VIEW) return line.resolvedIssues;
   return [...line.issues, ...line.resolvedIssues];
+}
+
+function toggleFlagIssue(lineIndex, issueIndex, view){
+  let issue = view === SOLVED_VIEW ? lines[lineIndex].resolvedIssues[issueIndex] : lines[lineIndex].issues[issueIndex];
+  issue.flagged = !issue.flagged;
+  render();
 }
 
 function render(){
@@ -602,7 +626,7 @@ function render(){
         const issueIndex = issueType === CURRENT_VIEW ? line.issues.indexOf(issue) : line.resolvedIssues.indexOf(issue);
 
         const card = document.createElement('div');
-        card.className = 'card';
+        card.className = `card ${issue.flagged ? 'flagged' : ''}`;
 
         let meetingsHtml = '';
         if (issue.visits && issue.visits.length > 0) {
@@ -622,6 +646,7 @@ function render(){
         }
 
         const isSolvedView = issueType === SOLVED_VIEW;
+        const flagButtonClass = issue.flagged ? 'flag flagged' : 'flag';
 
         card.innerHTML = `
           <div class="card-title">${issue.title}</div>
@@ -637,6 +662,7 @@ function render(){
             <button class="card-button" onclick="editIssue(${lineIndex},${issueIndex}, '${issueType}')">Edit</button>
             <button class="card-button" onclick="deleteIssue(${lineIndex},${issueIndex}, '${issueType}')">Delete</button>
             <button class="card-button" onclick="addVisit(${lineIndex},${issueIndex}, '${issueType}')">+ Meeting</button>
+            ${issueType === CURRENT_VIEW ? `<button class="card-button ${flagButtonClass}" onclick="toggleFlagIssue(${lineIndex},${issueIndex}, '${issueType}')">🚨 ${issue.flagged ? 'Unflag' : 'Flag'}</button>` : ''}
             <button class="card-button ${isSolvedView ? 'blue' : 'green'}" onclick="${isSolvedView ? `moveIssueToCurrent(${lineIndex},${issueIndex})` : `moveIssueToSolved(${lineIndex},${issueIndex})`}">${isSolvedView ? 'Move to Current' : 'Move to Solved'}</button>
           </div>
         `;
@@ -652,6 +678,7 @@ function render(){
 
   document.getElementById('issueCount').innerText = getTotalCurrentIssues();
   document.getElementById('resolvedCount').innerText = getTotalResolvedIssues();
+  document.getElementById('flaggedCount').innerText = getTotalFlaggedIssues();
   document.getElementById('visitCount').innerText = getTotalVisits();
   renderSearchResults();
   saveData();
@@ -688,7 +715,8 @@ function saveNewIssue(lineIndex){
     dateFound:dateFound.value,
     foundHow:foundHow.value,
     description:description.value,
-    visits:[]
+    visits:[],
+    flagged:false
   });
   closeModal();
   render();
@@ -788,6 +816,7 @@ function moveIssueToSolved(lineIndex, issueIndex){
   const issue = lines[lineIndex].issues.splice(issueIndex, 1)[0];
   if (!issue) return;
   issue.resolvedDate = new Date().toLocaleString();
+  issue.flagged = false;
   lines[lineIndex].resolvedIssues.push(issue);
   render();
 }
