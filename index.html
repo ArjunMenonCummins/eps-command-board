@@ -348,7 +348,9 @@ function render(){
       <div class="card-title">${issue.title}</div>
       <div class="card-info">
         ESN: ${issue.esn}<br>
-        Station: ${issue.station}
+        Station: ${issue.station}<br>
+        Date Found: ${issue.dateFound || 'Not set'}<br>
+        Found By: ${issue.foundHow || 'Not set'}
       </div>
 
       ${meetingsHtml}
@@ -410,6 +412,8 @@ function addIssue(lineIndex){
  <input id="title" placeholder="Title">
  <input id="esn" placeholder="ESN">
  <input id="station" placeholder="Station">
+ <input id="dateFound" type="date" placeholder="Date Found">
+ <textarea id="foundHow" placeholder="How issue was found"></textarea>
  <textarea id="description" placeholder="Description"></textarea>
 
  <button onclick="saveNewIssue(${lineIndex})">
@@ -429,6 +433,8 @@ function saveNewIssue(lineIndex){
    title:title.value,
    esn:esn.value,
    station:station.value,
+   dateFound:dateFound.value,
+   foundHow:foundHow.value,
    description:description.value,
    visits:[]
  });
@@ -448,6 +454,8 @@ function editIssue(lineIndex,issueIndex){
  <input id="title" value="${issue.title}">
  <input id="esn" value="${issue.esn}">
  <input id="station" value="${issue.station}">
+ <input id="dateFound" type="date" value="${issue.dateFound || ''}">
+ <textarea id="foundHow">${issue.foundHow || ''}</textarea>
  <textarea id="description">${issue.description}</textarea>
 
  <button onclick="
@@ -467,6 +475,8 @@ function updateIssue(lineIndex,issueIndex){
  issue.title=title.value;
  issue.esn=esn.value;
  issue.station=station.value;
+ issue.dateFound=dateFound.value;
+ issue.foundHow=foundHow.value;
  issue.description=description.value;
 
  closeModal();
@@ -490,7 +500,7 @@ function addVisit(lineIndex,issueIndex){
  openModal(`
  <h2>Add Meeting</h2>
 
- <input id="date" placeholder="Date">
+ <input id="date" type="date" placeholder="Date">
  <input id="people" placeholder="People">
  <input id="location" placeholder="Location">
  <textarea id="notes" placeholder="Notes"></textarea>
@@ -531,6 +541,8 @@ function viewIssue(lineIndex,issueIndex){
 
  <p><b>ESN:</b> ${issue.esn}</p>
  <p><b>Station:</b> ${issue.station}</p>
+ <p><b>Date Found:</b> ${issue.dateFound || 'Not set'}</p>
+ <p><b>How issue was found:</b> ${issue.foundHow || 'Not set'}</p>
  <p>${issue.description}</p>
 
  <h3>Meetings</h3>
@@ -587,6 +599,8 @@ function resolveIssue(lineIndex,issueIndex){
    esn:issue.esn,
    station:issue.station,
    line:lines[lineIndex].name,
+   dateFound:issue.dateFound,
+   foundHow:issue.foundHow,
    resolvedDate:new Date().toLocaleString(),
    visits:issue.visits.length
  });
@@ -607,7 +621,7 @@ function editVisit(lineIndex,issueIndex,visitIndex){
 
  <h2>Edit Meeting</h2>
 
- <input id="date" value="${visit.date}">
+ <input id="date" type="date" value="${visit.date}">
  <input id="people" value="${visit.people}">
  <input id="location" value="${visit.location}">
  <textarea id="notes">${visit.notes}</textarea>
