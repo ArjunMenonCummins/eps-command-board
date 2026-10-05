@@ -26,10 +26,34 @@ body{
  border-bottom:1px solid #ddd;
 }
 
+.header-top{
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+ gap:20px;
+ flex-wrap:wrap;
+}
+
+.view-toggle{
+ display:flex;
+ gap:10px;
+}
+
+.view-toggle button{
+ padding:10px 16px;
+ font-weight:bold;
+}
+
+.view-toggle .active{
+ background:#222;
+ color:white;
+}
+
 .stats{
  display:flex;
  gap:15px;
  margin-top:10px;
+ flex-wrap:wrap;
 }
 
 .stat{
@@ -162,6 +186,15 @@ button:hover{
  background:#45a049;
 }
 
+.current-btn{
+ background:#2d6cdf;
+ color:white;
+}
+
+.current-btn:hover{
+ background:#2458b5;
+}
+
 .modal{
  display:none;
  position:fixed;
@@ -198,7 +231,14 @@ input,textarea{
 
 <div class="header">
 
-<h1>EPS COMMAND BOARD</h1>
+<div class="header-top">
+  <h1>EPS COMMAND BOARD</h1>
+
+  <div class="view-toggle">
+    <button id="currentViewButton" class="active" onclick="setView('current')">Current</button>
+    <button id="solvedViewButton" onclick="setView('solved')">Solved</button>
+  </div>
+</div>
 
 <div class="stats">
 
@@ -231,6 +271,10 @@ Visits This Week:
 
 <script>
 
+const CURRENT_VIEW = "current";
+const SOLVED_VIEW = "solved";
+let currentView = localStorage.getItem("epsCurrentView") || CURRENT_VIEW;
+
 let lines = JSON.parse(
  localStorage.getItem("epsLines")
 ) || [
@@ -238,82 +282,118 @@ let lines = JSON.parse(
 {
  name:"19L",
  color:"red",
- issues:[]
+ issues:[],
+ resolvedIssues:[]
 },
 
 {
  name:"30L",
  color:"orange",
- issues:[]
+ issues:[],
+ resolvedIssues:[]
 },
 
 {
  name:"95L",
  color:"yellow",
- issues:[]
+ issues:[],
+ resolvedIssues:[]
 },
 
 {
  name:"15L",
  color:"green",
- issues:[]
+ issues:[],
+ resolvedIssues:[]
 }
 
 ];
 
-let resolvedIssues = JSON.parse(
- localStorage.getItem("epsResolvedIssues")
-) || [];
-
-function saveData(){
- localStorage.setItem(
-   "epsLines",
-   JSON.stringify(lines)
- );
- localStorage.setItem(
-   "epsResolvedIssues",
-   JSON.stringify(resolvedIssues)
- );
+function normalizeLines() {
+ lines = lines.map(line => ({
+   name: line.name,
+   color: line.color,
+   issues: Array.isArray(line.issues) ? line.issues : [],
+   resolvedIssues: Array.isArray(line.resolvedIssues) ? line.resolvedIssues : []
+ }));
 }
 
-function getResolvedCountForLine(lineName){
- return resolvedIssues.filter(issue => issue.line === lineName).length;
+normalizeLines();
+
+const legacyResolved = JSON.parse(localStorage.getItem("epsResolvedIssues") || "[]");
+if (legacyResolved.length && lines.some(line => line.resolvedIssues.length === 0)) {
+  legacyResolved.forEach(issue => {
+    const targetLine = lines.find(line => line.name === issue.line);
+    if (targetLine && !targetLine.resolvedIssues.some(item => item.title === issue.title && item.esn === issue.esn && item.station === issue.station)) {
+      targetLine.resolvedIssues.push({
+        ...issue,
+        visits: Array.isArray(issue.visits) ? issue.visits : []
+      });
+    }
+  });
+  localStorage.setItem("epsResolvedIssues", JSON.stringify([]));
+}
+
+function saveData(){
+  localStorage.setItem("epsLines", JSON.stringify(lines));
+  localStorage.setItem("epsCurrentView", currentView);
+
+  const flattenedResolved = lines.flatMap(line => line.resolvedIssues.map(issue => ({
+    ...issue,
+    line: line.name
+  })));
+  localStorage.setItem("epsResolvedIssues", JSON.stringify(flattenedResolved));
+}
+
+function getTotalCurrentIssues(){
+  return lines.reduce((total, line) => total + line.issues.length, 0);
+}
+
+function getTotalResolvedIssues(){
+  return lines.reduce((total, line) => total + line.resolvedIssues.length, 0);
+}
+
+function getTotalVisits(){
+  return lines.reduce((total, line) => {
+    return total + line.issues.reduce((sum, issue) => sum + issue.visits.length, 0) + line.resolvedIssues.reduce((sum, issue) => sum + issue.visits.length, 0);
+  }, 0);
+}
+
+function setView(view){
+  currentView = view;
+  render();
 }
 
 function render(){
 
- lines.sort(
-   (a,b)=>b.issues.length-a.issues.length
- );
-
- let issueTotal=0;
- let visitTotal=0;
+ lines.sort((a,b) => {
+   const aCount = currentView === CURRENT_VIEW ? b.issues.length : b.resolvedIssues.length;
+   const bCount = currentView === CURRENT_VIEW ? a.issues.length : a.resolvedIssues.length;
+   return aCount - bCount;
+ });
 
  let board=document.getElementById("board");
  board.innerHTML="";
 
+ document.getElementById("currentViewButton").classList.toggle("active", currentView === CURRENT_VIEW);
+ document.getElementById("solvedViewButton").classList.toggle("active", currentView === SOLVED_VIEW);
+
  lines.forEach((line,lineIndex)=>{
 
-   issueTotal += line.issues.length;
-
-   line.issues.forEach(issue=>{
-      visitTotal += issue.visits.length;
-   });
+   let visibleIssues = currentView === CURRENT_VIEW ? line.issues : line.resolvedIssues;
 
    let column=document.createElement("div");
    column.className="column";
-
-   let resolvedCount = getResolvedCountForLine(line.name);
 
    column.innerHTML=
    `
    <div class="column-header ${line.color}">
       <div class="header-title">
-        ${line.name} (${line.issues.length})
+        ${line.name} (${visibleIssues.length})
       </div>
       <div class="header-badges">
         <div class="badge">Current: ${line.issues.length}</div>
-        <div class="badge">Solved: ${resolvedCount}</div>
+        <div class="badge">Solved: ${line.resolvedIssues.length}</div>
       </div>
       <button onclick="addIssue(${lineIndex})">
       + Issue
@@ -321,13 +401,13 @@ function render(){
    </div>
    `;
 
-   line.issues.forEach((issue,issueIndex)=>{
+   visibleIssues.forEach((issue,issueIndex)=>{
 
       let card=document.createElement("div");
       card.className="card";
 
       let meetingsHtml = '';
-      if(issue.visits.length > 0){
+      if(issue.visits && issue.visits.length > 0){
         meetingsHtml = '<div class="meetings">';
         issue.visits.forEach((visit, visitIndex) => {
           meetingsHtml += `
@@ -343,6 +423,8 @@ function render(){
         meetingsHtml += '</div>';
       }
 
+      const isSolvedView = currentView === SOLVED_VIEW;
+
       card.innerHTML=
       `
       <div class="card-title">${issue.title}</div>
@@ -357,24 +439,24 @@ function render(){
 
       <div class="actions">
 
-        <button onclick="viewIssue(${lineIndex},${issueIndex})">
+        <button onclick="viewIssue(${lineIndex},${issueIndex}, '${currentView}')">
         Open
         </button>
 
-        <button onclick="editIssue(${lineIndex},${issueIndex})">
+        <button onclick="editIssue(${lineIndex},${issueIndex}, '${currentView}')">
         Edit
         </button>
 
-        <button onclick="deleteIssue(${lineIndex},${issueIndex})">
+        <button onclick="deleteIssue(${lineIndex},${issueIndex}, '${currentView}')">
         Delete
         </button>
 
-        <button onclick="addVisit(${lineIndex},${issueIndex})">
+        <button onclick="addVisit(${lineIndex},${issueIndex}, '${currentView}')">
         + Meeting
         </button>
 
-        <button class="resolve-btn" onclick="resolveIssue(${lineIndex},${issueIndex})">
-        Resolve
+        <button class="${isSolvedView ? 'current-btn' : 'resolve-btn'}" onclick="${isSolvedView ? `moveIssueToCurrent(${lineIndex},${issueIndex})` : `moveIssueToSolved(${lineIndex},${issueIndex})`}">
+        ${isSolvedView ? 'Move to Current' : 'Move to Solved'}
         </button>
 
       </div>
@@ -388,9 +470,9 @@ function render(){
 
  });
 
- document.getElementById("issueCount").innerText=issueTotal;
- document.getElementById("resolvedCount").innerText=resolvedIssues.length;
- document.getElementById("visitCount").innerText=visitTotal;
+ document.getElementById("issueCount").innerText=getTotalCurrentIssues();
+ document.getElementById("resolvedCount").innerText=getTotalResolvedIssues();
+ document.getElementById("visitCount").innerText=getTotalVisits();
 
  saveData();
 }
@@ -443,10 +525,9 @@ function saveNewIssue(lineIndex){
  render();
 }
 
-function editIssue(lineIndex,issueIndex){
+function editIssue(lineIndex,issueIndex, view){
 
- let issue =
- lines[lineIndex].issues[issueIndex];
+ let issue = view === SOLVED_VIEW ? lines[lineIndex].resolvedIssues[issueIndex] : lines[lineIndex].issues[issueIndex];
 
  openModal(`
  <h2>Edit Issue</h2>
@@ -459,7 +540,7 @@ function editIssue(lineIndex,issueIndex){
  <textarea id="description">${issue.description}</textarea>
 
  <button onclick="
- updateIssue(${lineIndex},${issueIndex})
+ updateIssue(${lineIndex},${issueIndex}, '${view}')
  ">
  Save
  </button>
@@ -467,10 +548,9 @@ function editIssue(lineIndex,issueIndex){
 
 }
 
-function updateIssue(lineIndex,issueIndex){
+function updateIssue(lineIndex,issueIndex, view){
 
- let issue =
- lines[lineIndex].issues[issueIndex];
+ let issue = view === SOLVED_VIEW ? lines[lineIndex].resolvedIssues[issueIndex] : lines[lineIndex].issues[issueIndex];
 
  issue.title=title.value;
  issue.esn=esn.value;
@@ -483,19 +563,21 @@ function updateIssue(lineIndex,issueIndex){
  render();
 }
 
-function deleteIssue(lineIndex,issueIndex){
+function deleteIssue(lineIndex,issueIndex, view){
 
  if(confirm("Delete issue?")){
 
-  lines[lineIndex]
-    .issues
-    .splice(issueIndex,1);
+   if (view === SOLVED_VIEW) {
+     lines[lineIndex].resolvedIssues.splice(issueIndex,1);
+   } else {
+     lines[lineIndex].issues.splice(issueIndex,1);
+   }
 
-  render();
+   render();
  }
 }
 
-function addVisit(lineIndex,issueIndex){
+function addVisit(lineIndex,issueIndex, view){
 
  openModal(`
  <h2>Add Meeting</h2>
@@ -506,7 +588,7 @@ function addVisit(lineIndex,issueIndex){
  <textarea id="notes" placeholder="Notes"></textarea>
 
  <button onclick="
- saveVisit(${lineIndex},${issueIndex})
+ saveVisit(${lineIndex},${issueIndex}, '${view}')
  ">
  Save
  </button>
@@ -514,27 +596,26 @@ function addVisit(lineIndex,issueIndex){
 
 }
 
-function saveVisit(lineIndex,issueIndex){
+function saveVisit(lineIndex,issueIndex, view){
 
- lines[lineIndex]
- .issues[issueIndex]
- .visits.push({
+ let issue = view === SOLVED_VIEW ? lines[lineIndex].resolvedIssues[issueIndex] : lines[lineIndex].issues[issueIndex];
 
+ if (!issue.visits) issue.visits = [];
+
+ issue.visits.push({
    date:date.value,
    people:people.value,
    location:location.value,
    notes:notes.value
-
  });
 
  closeModal();
  render();
 }
 
-function viewIssue(lineIndex,issueIndex){
+function viewIssue(lineIndex,issueIndex, view){
 
- let issue =
- lines[lineIndex].issues[issueIndex];
+ let issue = view === SOLVED_VIEW ? lines[lineIndex].resolvedIssues[issueIndex] : lines[lineIndex].issues[issueIndex];
 
  let html=`
  <h2>${issue.title}</h2>
@@ -548,37 +629,39 @@ function viewIssue(lineIndex,issueIndex){
  <h3>Meetings</h3>
  `;
 
- issue.visits.forEach((visit,index)=>{
+ if (issue.visits && issue.visits.length) {
+   issue.visits.forEach((visit,index)=>{
 
- html += `
- <div class="visit">
+   html += `
+   <div class="visit">
 
- <b>Meeting ${index+1}</b><br><br>
+   <b>Meeting ${index+1}</b><br><br>
 
- Date: ${visit.date}<br>
- People: ${visit.people}<br>
- Location: ${visit.location}<br>
- Notes: ${visit.notes}
+   Date: ${visit.date}<br>
+   People: ${visit.people}<br>
+   Location: ${visit.location}<br>
+   Notes: ${visit.notes}
 
- <br><br>
+   <br><br>
 
- <button onclick="
- editVisit(${lineIndex},
-           ${issueIndex},
-           ${index})">
- Edit
- </button>
-
- <button onclick="
- deleteVisit(${lineIndex},
+   <button onclick="
+   editVisit(${lineIndex},
              ${issueIndex},
-             ${index})">
- Delete
- </button>
+             ${index}, '${view}')">
+   Edit
+   </button>
 
- </div>
- `;
- });
+   <button onclick="
+   deleteVisit(${lineIndex},
+               ${issueIndex},
+               ${index}, '${view}')">
+   Delete
+   </button>
+
+   </div>
+   `;
+   });
+ }
 
  html += `
  <br>
@@ -590,32 +673,25 @@ function viewIssue(lineIndex,issueIndex){
  openModal(html);
 }
 
-function resolveIssue(lineIndex,issueIndex){
-
- let issue = lines[lineIndex].issues[issueIndex];
-
- resolvedIssues.push({
-   title:issue.title,
-   esn:issue.esn,
-   station:issue.station,
-   line:lines[lineIndex].name,
-   dateFound:issue.dateFound,
-   foundHow:issue.foundHow,
-   resolvedDate:new Date().toLocaleString(),
-   visits:issue.visits.length
- });
-
- lines[lineIndex].issues.splice(issueIndex,1);
-
- render();
+function moveIssueToSolved(lineIndex, issueIndex){
+  const issue = lines[lineIndex].issues.splice(issueIndex, 1)[0];
+  if (!issue) return;
+  issue.resolvedDate = new Date().toLocaleString();
+  lines[lineIndex].resolvedIssues.push(issue);
+  render();
 }
 
-function editVisit(lineIndex,issueIndex,visitIndex){
+function moveIssueToCurrent(lineIndex, issueIndex){
+  const issue = lines[lineIndex].resolvedIssues.splice(issueIndex, 1)[0];
+  if (!issue) return;
+  lines[lineIndex].issues.push(issue);
+  render();
+}
 
- let visit =
- lines[lineIndex]
- .issues[issueIndex]
- .visits[visitIndex];
+function editVisit(lineIndex,issueIndex,visitIndex, view){
+
+ let issue = view === SOLVED_VIEW ? lines[lineIndex].resolvedIssues[issueIndex] : lines[lineIndex].issues[issueIndex];
+ let visit = issue.visits[visitIndex];
 
  openModal(`
 
@@ -630,7 +706,8 @@ function editVisit(lineIndex,issueIndex,visitIndex){
  saveVisitEdit(
  ${lineIndex},
  ${issueIndex},
- ${visitIndex}
+ ${visitIndex},
+ '${view}'
  )">
  Save
  </button>
@@ -642,13 +719,12 @@ function editVisit(lineIndex,issueIndex,visitIndex){
 function saveVisitEdit(
  lineIndex,
  issueIndex,
- visitIndex
+ visitIndex,
+ view
 ){
 
- let visit =
- lines[lineIndex]
- .issues[issueIndex]
- .visits[visitIndex];
+ let issue = view === SOLVED_VIEW ? lines[lineIndex].resolvedIssues[issueIndex] : lines[lineIndex].issues[issueIndex];
+ let visit = issue.visits[visitIndex];
 
  visit.date=date.value;
  visit.people=people.value;
@@ -662,13 +738,12 @@ function saveVisitEdit(
 function deleteVisit(
  lineIndex,
  issueIndex,
- visitIndex
+ visitIndex,
+ view
 ){
 
- lines[lineIndex]
- .issues[issueIndex]
- .visits
- .splice(visitIndex,1);
+ let issue = view === SOLVED_VIEW ? lines[lineIndex].resolvedIssues[issueIndex] : lines[lineIndex].issues[issueIndex];
+ issue.visits.splice(visitIndex,1);
 
  render();
 }
