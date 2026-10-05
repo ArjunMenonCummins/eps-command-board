@@ -1,1103 +1,836 @@
 <!DOCTYPE html>
-<!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>EPS Command Board</title>
-  <style>
-    :root{
-      --red:#DA291C;
-      --orange:#F58220;
-      --yellow:#FFD100;
-      --green:#4CAF50;
-      --blue:#0d6efd;
-      --dark:#222;
-      --bg:#f4f4f4;
-      --panel:#ffffff;
-      --line:#d9d9d9;
-      --muted:#666;
-      --shadow:0 4px 14px rgba(0,0,0,0.08);
-    }
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-    * { box-sizing: border-box; }
+<title>EPS Command Board</title>
 
-    body{
-      margin:0;
-      font-family: Segoe UI, Arial, sans-serif;
-      background:#fff;
-      color:#222;
-    }
+<style>
+:root{
+ --red:#DA291C;
+ --orange:#F58220;
+ --yellow:#FFD100;
+ --green:#4CAF50;
+ --panel:#f1f1f1;
+ --dark:#1d1d1d;
+ --muted:#666;
+ --border:#bdbdbd;
+ --shadow:0 1px 0 rgba(0,0,0,0.06);
+}
 
-    .header{
-      padding:20px 22px 16px;
-      border-bottom:1px solid #ddd;
-      background:#fff;
-    }
+*{ box-sizing:border-box; }
 
-    .header-top{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:18px;
-      flex-wrap:wrap;
-    }
+html,body{
+ margin:0;
+ padding:0;
+ font-family:Segoe UI,sans-serif;
+ background:#fff;
+ color:#222;
+}
 
-    h1{
-      margin:0;
-      font-size:2rem;
-      letter-spacing:0.06em;
-    }
+body{
+ min-height:100vh;
+}
 
-    .view-toggle{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-    }
+.header{
+ padding:20px 16px 12px 16px;
+ border-bottom:1px solid #ddd;
+}
 
-    .view-toggle button,
-    .search-actions button,
-    .primary-btn,
-    .secondary-btn,
-    .danger-btn,
-    .mini-btn{
-      border:none;
-      border-radius:8px;
-      padding:10px 14px;
-      font-weight:700;
-      cursor:pointer;
-      transition:0.2s ease;
-    }
+.header-top{
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+ gap:16px;
+ flex-wrap:wrap;
+}
 
-    .view-toggle button{
-      background:#ececec;
-      color:#222;
-    }
+h1{
+ margin:0;
+ font-size:clamp(2rem, 2.4vw, 3rem);
+ letter-spacing:0.04em;
+ font-weight:800;
+}
 
-    .view-toggle button.active{
-      background:#222;
-      color:white;
-    }
+.stats{
+ display:flex;
+ gap:12px;
+ margin-top:14px;
+ flex-wrap:wrap;
+}
 
-    .view-toggle button:hover,
-    .search-actions button:hover,
-    .primary-btn:hover,
-    .secondary-btn:hover,
-    .danger-btn:hover,
-    .mini-btn:hover{
-      filter:brightness(0.97);
-    }
+.stat{
+ background:#f5f5f5;
+ padding:10px 16px;
+ border-radius:8px;
+ border:1px solid #ddd;
+ font-size:14px;
+}
 
-    .stats{
-      display:flex;
-      gap:15px;
-      margin-top:16px;
-      flex-wrap:wrap;
-    }
+.search-wrap{
+ display:flex;
+ gap:12px;
+ align-items:center;
+ margin-top:18px;
+ flex-wrap:wrap;
+}
 
-    .stat{
-      background:#f5f5f5;
-      border:1px solid #ddd;
-      border-radius:10px;
-      padding:10px 16px;
-      min-width:160px;
-      font-weight:600;
-    }
+.search-box{
+ flex:1 1 700px;
+ min-width:220px;
+ width:100%;
+ max-width:none;
+ padding:13px 14px;
+ font-size:15px;
+ border:2px solid #222;
+ border-radius:8px;
+ background:white;
+}
 
-    .stat small{
-      display:block;
-      color:#555;
-      margin-top:4px;
-      font-size:12px;
-      font-weight:500;
-    }
+.search-box::placeholder{ color:#727272; }
 
-    .search-wrap{
-      margin-top:18px;
-      display:flex;
-      align-items:center;
-      gap:10px;
-      flex-wrap:wrap;
-    }
+.search-actions{
+ display:flex;
+ gap:8px;
+}
 
-    .search-box{
-      flex:1;
-      min-width:260px;
-      padding:14px 16px;
-      border:1px solid #ccc;
-      border-radius:10px;
-      font-size:15px;
-    }
+.search-actions button,
+.badge-btn,
+.column-add-btn,
+.card-button{
+ font-size:13px;
+ border-radius:6px;
+ border:1px solid #222;
+ cursor:pointer;
+}
 
-    .search-actions{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-    }
+.search-actions button{
+ padding:11px 18px;
+ background:#222;
+ color:white;
+ border:1px solid #222;
+ font-weight:700;
+}
 
-    .search-panel{
-      margin-top:20px;
-      border:1px solid #ddd;
-      background:#f8f8f8;
-      border-radius:12px;
-      padding:16px;
-      display:none;
-    }
+.search-actions button:hover{ background:#333; }
 
-    .search-panel.visible{
-      display:block;
-    }
+.search-panel{
+ margin-top:20px;
+ background:#f0f0f0;
+ border:2px solid #222;
+ border-radius:10px;
+ padding:16px;
+ max-height:420px;
+ overflow-y:auto;
+}
 
-    .search-panel h3{
-      margin:0 0 12px;
-      font-size:1.1rem;
-    }
+.search-panel h3{
+ margin:0 0 12px 0;
+ font-size:18px;
+}
 
-    .search-results{
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-    }
+.search-results{ display:flex; flex-direction:column; gap:12px; }
 
-    .search-item{
-      background:white;
-      border:1px solid #ddd;
-      border-radius:10px;
-      padding:12px;
-      box-shadow:var(--shadow);
-    }
+.search-item{
+ background:white;
+ border:2px solid #ddd;
+ border-radius:8px;
+ padding:14px;
+}
 
-    .search-item-header{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:10px;
-      margin-bottom:8px;
-      flex-wrap:wrap;
-    }
+.search-item-header{
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+ gap:10px;
+ margin-bottom:10px;
+ flex-wrap:wrap;
+}
 
-    .search-status{
-      display:inline-block;
-      padding:4px 10px;
-      border-radius:999px;
-      font-size:12px;
-      font-weight:700;
-      letter-spacing:0.02em;
-    }
+.search-status{
+ font-weight:bold;
+ padding:6px 12px;
+ border-radius:18px;
+ font-size:12px;
+ white-space:nowrap;
+}
 
-    .search-status.current{
-      background:#dfeeff;
-      color:#0c4ca3;
-    }
+.search-status.current{ background:#dfeeff; color:#0c4ca3; }
+.search-status.resolved{ background:#dff7e8; color:#1d6e3b; }
 
-    .search-status.resolved{
-      background:#dff7e8;
-      color:#1d6e3b;
-    }
+.search-line-badge{
+ background:#222;
+ color:white;
+ padding:4px 10px;
+ border-radius:4px;
+ font-size:12px;
+ font-weight:bold;
+}
 
-    .search-item-title{
-      font-size:17px;
-      font-weight:700;
-      margin-bottom:8px;
-    }
+.search-item-title{
+ font-size:16px;
+ font-weight:bold;
+ margin-bottom:8px;
+}
 
-    .search-meta{
-      color:#555;
-      font-size:13px;
-      line-height:1.7;
-    }
+.search-meta{
+ color:#444;
+ font-size:13px;
+ line-height:1.8;
+}
 
-    .search-empty{
-      background:white;
-      border:1px dashed #ccc;
-      border-radius:10px;
-      color:#666;
-      padding:16px;
-    }
+.search-meta div{ margin-bottom:4px; }
 
-    .board{
-      display:flex;
-      gap:15px;
-      padding:15px;
-      overflow-x:auto;
-      align-items:flex-start;
-    }
+.search-item-actions{ margin-top:12px; }
+.search-item-actions button{
+ background:#222;
+ color:white;
+ padding:10px 16px;
+ font-weight:bold;
+ border:1px solid #222;
+}
 
-    .column{
-      min-width:350px;
-      border:1px solid #ddd;
-      border-radius:12px;
-      background:#fafafa;
-      box-shadow:var(--shadow);
-    }
+.search-empty{
+ background:white;
+ border:2px dashed #999;
+ border-radius:8px;
+ padding:16px;
+ color:#666;
+ text-align:center;
+}
 
-    .column-header{
-      padding:12px;
-      color:#fff;
-      font-weight:700;
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:10px;
-      border-top-left-radius:12px;
-      border-top-right-radius:12px;
-    }
+.board-wrap{
+ padding:0 16px 18px 16px;
+}
 
-    .header-title{
-      flex:1;
-      white-space:nowrap;
-    }
+.board{
+ display:flex;
+ gap:15px;
+ flex-wrap:wrap;
+ align-items:flex-start;
+ width:100%;
+}
 
-    .header-badges{
-      display:flex;
-      gap:8px;
-      align-items:center;
-      font-size:12px;
-      flex-wrap:wrap;
-    }
+.column{
+ flex:1 1 min(24%, 380px);
+ min-width:250px;
+ max-width:100%;
+ border:1px solid #d3d3d3;
+ border-radius:12px;
+ background:#fafafa;
+ overflow:hidden;
+}
 
-    .badge{
-      background:rgba(255,255,255,0.25);
-      color:#fff;
-      padding:4px 8px;
-      border-radius:999px;
-      white-space:nowrap;
-      font-weight:700;
-    }
+.column-header{
+ padding:12px 10px;
+ color:white;
+ font-weight:bold;
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+ gap:8px;
+ flex-wrap:wrap;
+}
 
-    .red{ background:var(--red); }
-    .orange{ background:var(--orange); }
-    .yellow{ background:var(--yellow); color:#111; }
-    .green{ background:var(--green); }
+.header-title{
+ font-size:18px;
+ font-weight:800;
+}
 
-    .column-body{
-      padding:10px;
-    }
+.header-badges{
+ display:flex;
+ gap:8px;
+ flex-wrap:wrap;
+}
 
-    .card{
-      background:white;
-      border:1px solid #ddd;
-      border-radius:10px;
-      padding:12px;
-      margin-bottom:12px;
-      box-shadow:0 2px 8px rgba(0,0,0,0.04);
-    }
+.badge-btn{
+ background:rgba(255,255,255,0.24);
+ border:1px solid rgba(255,255,255,0.7);
+ color:white;
+ padding:6px 10px;
+ font-weight:700;
+}
 
-    .issue-top{
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-start;
-      gap:10px;
-      margin-bottom:8px;
-    }
+.badge-btn.active{
+ background:rgba(0,0,0,0.18);
+ box-shadow:inset 0 0 0 1px rgba(255,255,255,0.7);
+}
 
-    .issue-title{
-      font-weight:700;
-      font-size:15px;
-      line-height:1.4;
-      flex:1;
-    }
+.column-add-btn{
+ background:#fff;
+ color:#222;
+ border:1px solid rgba(0,0,0,0.2);
+ padding:6px 10px;
+ font-weight:700;
+}
 
-    .status-pill{
-      font-size:11px;
-      font-weight:700;
-      border-radius:999px;
-      padding:5px 9px;
-      white-space:nowrap;
-    }
+.column-body{ padding:6px 10px 10px 10px; }
 
-    .status-pill.current{
-      background:#dfeeff;
-      color:#0c4ca3;
-    }
+.card{
+ background:white;
+ margin:10px 0;
+ border:1px solid #ddd;
+ border-radius:8px;
+ padding:10px;
+ box-shadow:var(--shadow);
+}
 
-    .status-pill.resolved{
-      background:#dff7e8;
-      color:#1d6e3b;
-    }
+.card-title{
+ font-weight:bold;
+ margin-bottom:8px;
+}
 
-    .meta{
-      color:#444;
-      font-size:13px;
-      line-height:1.7;
-    }
+.card-info{
+ font-size:14px;
+ margin-bottom:8px;
+ color:#555;
+ line-height:1.5;
+}
 
-    .actions{
-      display:flex;
-      gap:6px;
-      flex-wrap:wrap;
-      margin-top:12px;
-    }
+.meetings{
+ margin-top:10px;
+ border-top:1px solid #eee;
+ padding-top:8px;
+}
 
-    .mini-btn{
-      background:#ececec;
-      color:#222;
-      padding:7px 10px;
-      font-size:12px;
-    }
+.meeting-item{
+ background:#f9f9f9;
+ padding:8px;
+ margin:5px 0;
+ border-radius:6px;
+ font-size:12px;
+ border-left:3px solid var(--orange);
+}
 
-    .primary-btn{
-      background:#222;
-      color:#fff;
-    }
+.meeting-label{ font-weight:bold; }
+.meeting-detail{ color:#666; margin-top:3px; }
 
-    .secondary-btn{
-      background:#efefef;
-      color:#222;
-    }
+.actions{ display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
 
-    .danger-btn{
-      background:#f7d7d7;
-      color:#8f1d1d;
-    }
+.card-button{
+ padding:7px 10px;
+ background:#ececec;
+ border:1px solid #d7d7d7;
+ color:#222;
+}
 
-    .modal{
-      display:none;
-      position:fixed;
-      inset:0;
-      background:rgba(0,0,0,0.7);
-      overflow:auto;
-      z-index:1000;
-      padding:24px;
-    }
+.card-button.green{ background:#4CAF50; color:white; border-color:#4CAF50; }
+.card-button.blue{ background:#2d6cdf; color:white; border-color:#2d6cdf; }
 
-    .modal-content{
-      max-width:900px;
-      margin:40px auto;
-      background:#fff;
-      border-radius:12px;
-      padding:22px;
-      box-shadow:0 15px 40px rgba(0,0,0,0.2);
-    }
+.modal{
+ display:none;
+ position:fixed;
+ inset:0;
+ background:rgba(0,0,0,.7);
+ overflow:auto;
+ z-index:1000;
+}
 
-    .modal h2, .modal h3{
-      margin-top:0;
-    }
+.modal-content{
+ max-width:900px;
+ margin:40px auto;
+ background:white;
+ padding:20px;
+ border-radius:8px;
+}
 
-    .form-grid{
-      display:grid;
-      grid-template-columns:repeat(2,minmax(0,1fr));
-      gap:12px;
-    }
+input,textarea{
+ width:100%;
+ padding:8px;
+ margin-bottom:10px;
+ box-sizing:border-box;
+}
 
-    .full{
-      grid-column:1 / -1;
-    }
+.visit{
+ margin-top:10px;
+ background:#f7f7f7;
+ padding:10px;
+ border-left:4px solid var(--red);
+}
 
-    label{
-      display:block;
-      font-weight:600;
-      margin:8px 0 6px;
-      color:#333;
-    }
+.empty-state{
+ background:#f8f8f8;
+ border:1px solid #ddd;
+ border-radius:8px;
+ padding:18px;
+ text-align:center;
+ color:#666;
+ margin:10px 0;
+}
 
-    input, textarea, select{
-      width:100%;
-      padding:10px 12px;
-      border:1px solid #ccc;
-      border-radius:8px;
-      font:inherit;
-      background:#fff;
-      color:#111;
-    }
+.red{background:var(--red);} .orange{background:var(--orange);} .yellow{background:var(--yellow); color:#111;} .green{background:var(--green);}
 
-    textarea{
-      min-height:100px;
-      resize:vertical;
-    }
+@media (max-width: 1024px){
+  .column{ flex:1 1 45%; }
+}
 
-    .button-row{
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-      margin-top:14px;
-    }
-
-    .visit{
-      background:#f8f8f8;
-      border:1px solid #ddd;
-      border-radius:10px;
-      padding:12px;
-      margin-top:12px;
-    }
-
-    .visit-header{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:10px;
-      margin-bottom:12px;
-      flex-wrap:wrap;
-    }
-
-    .visit-actions{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      margin-top:10px;
-    }
-
-    @media (max-width: 800px){
-      .form-grid{
-        grid-template-columns:1fr;
-      }
-
-      .column{
-        min-width:280px;
-      }
-    }
-  </style>
+@media (max-width: 720px){
+  .header{ padding:16px 12px 10px 12px; }
+  .board-wrap{ padding:0 12px 14px 12px; }
+  .search-wrap{ flex-direction:column; align-items:stretch; }
+  .search-actions{ width:100%; }
+  .search-actions button{ flex:1; }
+  .column{ flex:1 1 100%; min-width:0; }
+  .header-badges{ width:100%; }
+  .badge-btn{ flex:1; }
+}
+</style>
 </head>
 <body>
 
-  <div class="header">
-    <div class="header-top">
-      <h1>EPS COMMAND BOARD</h1>
+<div class="header">
+  <div class="header-top">
+    <h1>EPS COMMAND BOARD</h1>
+  </div>
 
-      <div class="view-toggle">
-        <button class="view-btn active" data-view="board">Board View</button>
-        <button class="view-btn" data-view="search">Search View</button>
-      </div>
-    </div>
+  <div class="stats">
+    <div class="stat">Current Issues: <span id="issueCount">0</span></div>
+    <div class="stat">Issues Resolved: <span id="resolvedCount">0</span></div>
+    <div class="stat">Visits This Week: <span id="visitCount">0</span></div>
+  </div>
 
-    <div class="stats">
-      <div class="stat">
-        Open Issues
-        <small id="issueCount">0</small>
-      </div>
-
-      <div class="stat">
-        Meetings Logged
-        <small id="visitCount">0</small>
-      </div>
-
-      <div class="stat">
-        Current Issues
-        <small id="currentCount">0</small>
-      </div>
-
-      <div class="stat">
-        Resolved Issues
-        <small id="resolvedCount">0</small>
-      </div>
-    </div>
-
-    <div class="search-wrap">
-      <input id="globalSearch" class="search-box" type="text" placeholder="Search issue titles, ESN, station, description, or meeting notes..." />
-      <div class="search-actions">
-        <button class="secondary-btn" onclick="clearSearch()">Clear</button>
-      </div>
-    </div>
-
-    <div id="searchPanel" class="search-panel">
-      <h3>Search Results</h3>
-      <div id="searchResults" class="search-results"></div>
+  <div class="search-wrap">
+    <input id="searchInput" class="search-box" type="text" placeholder="🔍 Search everything (ESN, title, description, notes...)" />
+    <div class="search-actions">
+      <button onclick="runSearch()">Search</button>
+      <button onclick="clearSearch()">Clear</button>
     </div>
   </div>
 
+  <div class="search-panel">
+    <h3>📋 Search Results</h3>
+    <div id="searchResults" class="search-results"></div>
+  </div>
+</div>
+
+<div class="board-wrap">
   <div id="board" class="board"></div>
+</div>
 
-  <div id="modal" class="modal">
-    <div id="modalContent" class="modal-content"></div>
+<div id="modal" class="modal">
+  <div class="modal-content">
+    <div id="modalContent"></div>
   </div>
+</div>
 
-  <script>
-    const STORAGE_KEY = "epsLinesV2";
+<script>
+const CURRENT_VIEW = "current";
+const SOLVED_VIEW = "solved";
+const ALL_VIEW = "all";
 
-    const defaultLines = [
-      { name: "19L", color: "red", issues: [] },
-      { name: "30L", color: "orange", issues: [] },
-      { name: "95L", color: "yellow", issues: [] },
-      { name: "15L", color: "green", issues: [] }
-    ];
+let activeFilter = localStorage.getItem("epsActiveFilter") || ALL_VIEW;
+let activeLine = localStorage.getItem("epsActiveLine") || null;
+let searchResults = [];
 
-    let state = {
-      view: "board",
-      lines: [],
-      searchQuery: ""
-    };
+let lines = JSON.parse(localStorage.getItem("epsLines")) || [
+  { name:"19L", color:"red", issues:[], resolvedIssues:[] },
+  { name:"30L", color:"orange", issues:[], resolvedIssues:[] },
+  { name:"95L", color:"yellow", issues:[], resolvedIssues:[] },
+  { name:"15L", color:"green", issues:[], resolvedIssues:[] }
+];
 
-    function loadData() {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) {
-        state.lines = JSON.parse(JSON.stringify(defaultLines));
-        return;
+function normalizeLines(){
+  lines = lines.map(line => ({
+    name: line.name,
+    color: line.color,
+    issues: Array.isArray(line.issues) ? line.issues : [],
+    resolvedIssues: Array.isArray(line.resolvedIssues) ? line.resolvedIssues : []
+  }));
+}
+
+normalizeLines();
+
+function saveData(){
+  localStorage.setItem("epsLines", JSON.stringify(lines));
+  localStorage.setItem("epsActiveFilter", activeFilter);
+  localStorage.setItem("epsActiveLine", activeLine || "");
+  const flattenedResolved = lines.flatMap(line => line.resolvedIssues.map(issue => ({ ...issue, line: line.name })));
+  localStorage.setItem("epsResolvedIssues", JSON.stringify(flattenedResolved));
+}
+
+function buildSearchableText(issue){
+  let text = [
+    issue.title || '',
+    issue.esn || '',
+    issue.station || '',
+    issue.description || '',
+    issue.foundHow || '',
+    issue.dateFound || ''
+  ].join(' ');
+
+  if (issue.visits && Array.isArray(issue.visits)) {
+    issue.visits.forEach(visit => {
+      text += ' ' + (visit.date || '') + ' ' + (visit.people || '') + ' ' + (visit.location || '') + ' ' + (visit.notes || '');
+    });
+  }
+
+  return text.toLowerCase();
+}
+
+function runSearch(){
+  const query = document.getElementById('searchInput').value.trim().toLowerCase();
+  if (!query) {
+    searchResults = [];
+    renderSearchResults();
+    return;
+  }
+
+  searchResults = [];
+
+  lines.forEach((line, lineIndex) => {
+    line.issues.forEach((issue, issueIndex) => {
+      if (buildSearchableText(issue).includes(query)) {
+        searchResults.push({ status:'Current', lineName:line.name, lineIndex, issueIndex, issue, isResolved:false });
       }
+    });
 
-      try {
-        const data = JSON.parse(raw);
-        if (!Array.isArray(data) || data.length === 0) {
-          state.lines = JSON.parse(JSON.stringify(defaultLines));
-          return;
+    line.resolvedIssues.forEach((issue, issueIndex) => {
+      if (buildSearchableText(issue).includes(query)) {
+        searchResults.push({ status:'Resolved', lineName:line.name, lineIndex, issueIndex, issue, isResolved:true });
+      }
+    });
+  });
+
+  renderSearchResults();
+}
+
+function clearSearch(){
+  document.getElementById('searchInput').value = '';
+  searchResults = [];
+  renderSearchResults();
+}
+
+function renderSearchResults(){
+  const container = document.getElementById('searchResults');
+  if (!searchResults || searchResults.length === 0) {
+    container.innerHTML = '<div class="search-empty">No results found. Try searching for an ESN, issue title, description, station, or any note text.</div>';
+    return;
+  }
+
+  let html = '';
+  searchResults.forEach((result) => {
+    const issue = result.issue;
+    const statusClass = result.status === 'Resolved' ? 'resolved' : 'current';
+    const openView = result.isResolved ? SOLVED_VIEW : CURRENT_VIEW;
+    const openCmd = `viewIssue(${result.lineIndex}, ${result.issueIndex}, '${openView}')`;
+
+    html += `
+      <div class="search-item">
+        <div class="search-item-header">
+          <div class="search-status ${statusClass}">${result.status}</div>
+          <div class="search-line-badge">${result.lineName}</div>
+        </div>
+        <div class="search-item-title">${issue.title || 'No Title'}</div>
+        <div class="search-meta">
+          <div><b>ESN:</b> ${issue.esn || 'N/A'}</div>
+          <div><b>Station:</b> ${issue.station || 'N/A'}</div>
+          <div><b>Date Found:</b> ${issue.dateFound || 'N/A'}</div>
+          <div><b>How Found:</b> ${issue.foundHow || 'N/A'}</div>
+          <div><b>Description:</b> ${(issue.description || 'N/A').substring(0,150)}</div>
+        </div>
+        <div class="search-item-actions">
+          <button onclick="${openCmd}">Open Issue</button>
+        </div>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+}
+
+document.getElementById('searchInput').addEventListener('keydown', function(e){ if (e.key === 'Enter') runSearch(); });
+
+function getTotalCurrentIssues(){ return lines.reduce((total, line) => total + line.issues.length, 0); }
+function getTotalResolvedIssues(){ return lines.reduce((total, line) => total + line.resolvedIssues.length, 0); }
+function getTotalVisits(){
+  return lines.reduce((total, line) => total + line.issues.reduce((sum, issue) => sum + (issue.visits ? issue.visits.length : 0), 0) + line.resolvedIssues.reduce((sum, issue) => sum + (issue.visits ? issue.visits.length : 0), 0), 0);
+}
+
+function toggleFilter(lineName, status){
+  if (activeLine === lineName && activeFilter === status) {
+    activeLine = null;
+    activeFilter = ALL_VIEW;
+  } else {
+    activeLine = lineName;
+    activeFilter = status;
+  }
+  render();
+}
+
+function getFilteredLineIssues(line) {
+  if (activeLine && activeLine !== line.name) return [];
+  if (activeFilter === CURRENT_VIEW) return line.issues;
+  if (activeFilter === SOLVED_VIEW) return line.resolvedIssues;
+  return [...line.issues, ...line.resolvedIssues];
+}
+
+function render(){
+  let board = document.getElementById('board');
+  board.innerHTML = '';
+
+  lines.forEach((line, lineIndex) => {
+    const filteredIssues = getFilteredLineIssues(line);
+    const column = document.createElement('div');
+    column.className = 'column';
+
+    const currentButtonClass = activeLine === line.name && activeFilter === CURRENT_VIEW ? 'active' : '';
+    const solvedButtonClass = activeLine === line.name && activeFilter === SOLVED_VIEW ? 'active' : '';
+
+    const columnHeader = `
+      <div class="column-header ${line.color}">
+        <div class="header-title">${line.name}</div>
+        <div class="header-badges">
+          <button class="badge-btn ${currentButtonClass}" onclick="toggleFilter('${line.name}', '${CURRENT_VIEW}')">Current: ${line.issues.length}</button>
+          <button class="badge-btn ${solvedButtonClass}" onclick="toggleFilter('${line.name}', '${SOLVED_VIEW}')">Solved: ${line.resolvedIssues.length}</button>
+        </div>
+        <button class="column-add-btn" onclick="addIssue(${lineIndex})">+ Issue</button>
+      </div>
+    `;
+
+    const body = document.createElement('div');
+    body.className = 'column-body';
+
+    if (!filteredIssues || filteredIssues.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'empty-state';
+      empty.textContent = 'No items in this view.';
+      body.appendChild(empty);
+    } else {
+      filteredIssues.forEach((issue) => {
+        const issueType = line.issues.includes(issue) ? CURRENT_VIEW : SOLVED_VIEW;
+        const issueIndex = issueType === CURRENT_VIEW ? line.issues.indexOf(issue) : line.resolvedIssues.indexOf(issue);
+
+        const card = document.createElement('div');
+        card.className = 'card';
+
+        let meetingsHtml = '';
+        if (issue.visits && issue.visits.length > 0) {
+          meetingsHtml = '<div class="meetings">';
+          issue.visits.forEach((visit, visitIndex) => {
+            meetingsHtml += `
+              <div class="meeting-item">
+                <div class="meeting-label">Meeting ${visitIndex + 1}</div>
+                <div class="meeting-detail"><b>Date:</b> ${visit.date}</div>
+                <div class="meeting-detail"><b>People:</b> ${visit.people}</div>
+                <div class="meeting-detail"><b>Location:</b> ${visit.location}</div>
+                <div class="meeting-detail"><b>Notes:</b> ${visit.notes}</div>
+              </div>
+            `;
+          });
+          meetingsHtml += '</div>';
         }
 
-        state.lines = data.map(line => ({
-          name: line.name || "Unknown",
-          color: line.color || "red",
-          issues: Array.isArray(line.issues) ? line.issues.map(issue => ({
-            title: issue.title || "Untitled",
-            esn: issue.esn || "",
-            station: issue.station || "",
-            description: issue.description || "",
-            status: ["current", "resolved"].includes(issue.status) ? issue.status : "current",
-            visits: Array.isArray(issue.visits) ? issue.visits.map(visit => ({
-              date: visit.date || "",
-              people: visit.people || "",
-              location: visit.location || "",
-              notes: visit.notes || ""
-            })) : []
-          })) : []
-        }));
-      } catch (error) {
-        state.lines = JSON.parse(JSON.stringify(defaultLines));
-      }
-    }
+        const isSolvedView = issueType === SOLVED_VIEW;
 
-    function saveData() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.lines));
-    }
-
-    function sortLines() {
-      state.lines.sort((a, b) => {
-        if (b.issues.length !== a.issues.length) return b.issues.length - a.issues.length;
-        return a.name.localeCompare(b.name);
-      });
-    }
-
-    function renderStats() {
-      let issueTotal = 0;
-      let visitTotal = 0;
-      let currentTotal = 0;
-      let resolvedTotal = 0;
-
-      state.lines.forEach(line => {
-        line.issues.forEach(issue => {
-          issueTotal++;
-          visitTotal += issue.visits.length;
-          if (issue.status === "current") currentTotal++;
-          if (issue.status === "resolved") resolvedTotal++;
-        });
-      });
-
-      document.getElementById("issueCount").textContent = issueTotal;
-      document.getElementById("visitCount").textContent = visitTotal;
-      document.getElementById("currentCount").textContent = currentTotal;
-      document.getElementById("resolvedCount").textContent = resolvedTotal;
-    }
-
-    function getFilteredIssues() {
-      const q = (state.searchQuery || "").trim().toLowerCase();
-      const results = [];
-
-      state.lines.forEach((line, lineIndex) => {
-        line.issues.forEach((issue, issueIndex) => {
-          const haystack = [
-            line.name,
-            issue.title,
-            issue.esn,
-            issue.station,
-            issue.description,
-            issue.status,
-            ...(issue.visits || []).map(v => [
-              v.date, v.people, v.location, v.notes
-            ].join(" "))
-          ].join(" ").toLowerCase();
-
-          if (!q || haystack.includes(q)) {
-            results.push({ lineIndex, issueIndex, line, issue });
-          }
-        });
-      });
-
-      return results;
-    }
-
-    function renderSearchResults() {
-      const panel = document.getElementById("searchPanel");
-      const resultsWrap = document.getElementById("searchResults");
-      const q = (state.searchQuery || "").trim();
-
-      if (state.view !== "search") {
-        panel.classList.remove("visible");
-        return;
-      }
-
-      const matches = getFilteredIssues();
-
-      if (!q) {
-        resultsWrap.innerHTML = `<div class="search-empty">Type a keyword above to search across the board.</div>`;
-        panel.classList.add("visible");
-        return;
-      }
-
-      if (!matches.length) {
-        resultsWrap.innerHTML = `<div class="search-empty">No issues match your search.</div>`;
-        panel.classList.add("visible");
-        return;
-      }
-
-      resultsWrap.innerHTML = matches.map(({ lineIndex, issueIndex, line, issue }) => {
-        const statusClass = issue.status === "resolved" ? "resolved" : "current";
-        const statusText = issue.status === "resolved" ? "Resolved" : "Current";
-
-        return `
-          <div class="search-item">
-            <div class="search-item-header">
-              <div class="search-item-title">${escapeHtml(issue.title)}</div>
-              <span class="search-status ${statusClass}">${statusText}</span>
-            </div>
-
-            <div class="search-meta">
-              <div><strong>Line:</strong> ${escapeHtml(line.name)}</div>
-              <div><strong>ESN:</strong> ${escapeHtml(issue.esn || "—")}</div>
-              <div><strong>Station:</strong> ${escapeHtml(issue.station || "—")}</div>
-              <div><strong>Meetings:</strong> ${issue.visits.length}</div>
-              <div><strong>Description:</strong> ${escapeHtml(issue.description || "No description provided.")}</div>
-            </div>
-
-            <div class="search-item-actions">
-              <button class="mini-btn" onclick="viewIssue(${lineIndex}, ${issueIndex})">Open</button>
-              <button class="mini-btn" onclick="editIssue(${lineIndex}, ${issueIndex})">Edit</button>
-            </div>
+        card.innerHTML = `
+          <div class="card-title">${issue.title}</div>
+          <div class="card-info">
+            ESN: ${issue.esn}<br>
+            Station: ${issue.station}<br>
+            Date Found: ${issue.dateFound || 'Not set'}<br>
+            Found By: ${issue.foundHow || 'Not set'}
           </div>
-        `;
-      }).join("");
-
-      panel.classList.add("visible");
-    }
-
-    function renderBoard() {
-      const board = document.getElementById("board");
-      board.innerHTML = "";
-
-      sortLines();
-
-      state.lines.forEach((line, lineIndex) => {
-        const column = document.createElement("div");
-        column.className = "column";
-
-        const currentIssues = line.issues.filter(issue => issue.status === "current").length;
-        const resolvedIssues = line.issues.filter(issue => issue.status === "resolved").length;
-
-        column.innerHTML = `
-          <div class="column-header ${line.color}">
-            <div class="header-title">${line.name}</div>
-            <div class="header-badges">
-              <span class="badge">${line.issues.length}</span>
-              <span class="badge">${currentIssues} current</span>
-              <span class="badge">${resolvedIssues} resolved</span>
-            </div>
-          </div>
-
-          <div class="column-body">
-            <button class="primary-btn" style="width:100%; margin-bottom:10px;" onclick="addIssue(${lineIndex})">+ Issue</button>
-            ${line.issues.length === 0 ? `
-              <div class="search-empty" style="margin-top:10px;">No issues on this line.</div>
-            ` : ""}
+          ${meetingsHtml}
+          <div class="actions">
+            <button class="card-button" onclick="viewIssue(${lineIndex},${issueIndex}, '${issueType}')">Open</button>
+            <button class="card-button" onclick="editIssue(${lineIndex},${issueIndex}, '${issueType}')">Edit</button>
+            <button class="card-button" onclick="deleteIssue(${lineIndex},${issueIndex}, '${issueType}')">Delete</button>
+            <button class="card-button" onclick="addVisit(${lineIndex},${issueIndex}, '${issueType}')">+ Meeting</button>
+            <button class="card-button ${isSolvedView ? 'blue' : 'green'}" onclick="${isSolvedView ? `moveIssueToCurrent(${lineIndex},${issueIndex})` : `moveIssueToSolved(${lineIndex},${issueIndex})`}">${isSolvedView ? 'Move to Current' : 'Move to Solved'}</button>
           </div>
         `;
 
-        line.issues.forEach((issue, issueIndex) => {
-          const card = document.createElement("div");
-          card.className = "card";
-
-          card.innerHTML = `
-            <div class="issue-top">
-              <div class="issue-title">${escapeHtml(issue.title)}</div>
-              <span class="status-pill ${issue.status === "resolved" ? "resolved" : "current"}">${issue.status === "resolved" ? "Resolved" : "Current"}</span>
-            </div>
-
-            <div class="meta">
-              <div><strong>ESN:</strong> ${escapeHtml(issue.esn || "—")}</div>
-              <div><strong>Station:</strong> ${escapeHtml(issue.station || "—")}</div>
-              <div><strong>Meetings:</strong> ${issue.visits.length}</div>
-            </div>
-
-            <div class="actions">
-              <button class="mini-btn" onclick="viewIssue(${lineIndex}, ${issueIndex})">Open</button>
-              <button class="mini-btn" onclick="editIssue(${lineIndex}, ${issueIndex})">Edit</button>
-              <button class="mini-btn" onclick="toggleIssueStatus(${lineIndex}, ${issueIndex})">${issue.status === "resolved" ? "Reopen" : "Resolve"}</button>
-              <button class="mini-btn" onclick="deleteIssue(${lineIndex}, ${issueIndex})">Delete</button>
-              <button class="mini-btn" onclick="addVisit(${lineIndex}, ${issueIndex})">+ Meeting</button>
-            </div>
-          `;
-
-          column.appendChild(card);
-        });
-
-        board.appendChild(column);
+        body.appendChild(card);
       });
     }
 
-    function render() {
-      renderBoard();
-      renderStats();
-      renderSearchResults();
-      saveData();
-    }
-
-    function setView(mode) {
-      state.view = mode;
-
-      document.querySelectorAll(".view-btn").forEach(btn => {
-        btn.classList.toggle("active", btn.dataset.view === mode);
-      });
-
-      if (mode === "board") {
-        const panel = document.getElementById("searchPanel");
-        panel.classList.remove("visible");
-      } else {
-        renderSearchResults();
-      }
-    }
-
-    function openModal(html) {
-      const modal = document.getElementById("modal");
-      const modalContent = document.getElementById("modalContent");
-      modalContent.innerHTML = html;
-      modal.style.display = "block";
-    }
-
-    function closeModal() {
-      document.getElementById("modal").style.display = "none";
-    }
-
-    function escapeHtml(value) {
-      const unsafe = {
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        "\"": "&quot;",
-        "'": "&#039;"
-      };
-      return String(value ?? "").replace(/[&<>\"']/g, ch => unsafe[ch]);
-    }
-
-    function addIssue(lineIndex) {
-      openModal(`
-        <h2>New Issue</h2>
-
-        <div class="form-grid">
-          <div>
-            <label for="issueTitle">Title</label>
-            <input id="issueTitle" type="text" placeholder="Title" />
-          </div>
-
-          <div>
-            <label for="issueStatus">Status</label>
-            <select id="issueStatus">
-              <option value="current">Current</option>
-              <option value="resolved">Resolved</option>
-            </select>
-          </div>
-
-          <div>
-            <label for="issueEsn">ESN</label>
-            <input id="issueEsn" type="text" placeholder="ESN" />
-          </div>
-
-          <div>
-            <label for="issueStation">Station</label>
-            <input id="issueStation" type="text" placeholder="Station" />
-          </div>
-
-          <div class="full">
-            <label for="issueDescription">Description</label>
-            <textarea id="issueDescription" placeholder="Description"></textarea>
-          </div>
-        </div>
-
-        <div class="button-row">
-          <button class="primary-btn" onclick="saveNewIssue(${lineIndex})">Save</button>
-          <button class="secondary-btn" onclick="closeModal()">Cancel</button>
-        </div>
-      `);
-    }
-
-    function saveNewIssue(lineIndex) {
-      const title = document.getElementById("issueTitle").value.trim();
-      const esn = document.getElementById("issueEsn").value.trim();
-      const station = document.getElementById("issueStation").value.trim();
-      const description = document.getElementById("issueDescription").value.trim();
-      const status = document.getElementById("issueStatus").value;
-
-      if (!title) {
-        alert("Issue title is required.");
-        return;
-      }
-
-      state.lines[lineIndex].issues.push({
-        title,
-        esn,
-        station,
-        description,
-        status,
-        visits: []
-      });
-
-      closeModal();
-      render();
-    }
-
-    function editIssue(lineIndex, issueIndex) {
-      const issue = state.lines[lineIndex].issues[issueIndex];
-
-      openModal(`
-        <h2>Edit Issue</h2>
-
-        <div class="form-grid">
-          <div>
-            <label for="issueTitle">Title</label>
-            <input id="issueTitle" type="text" value="${escapeHtml(issue.title)}" />
-          </div>
-
-          <div>
-            <label for="issueStatus">Status</label>
-            <select id="issueStatus">
-              <option value="current" ${issue.status === "current" ? "selected" : ""}>Current</option>
-              <option value="resolved" ${issue.status === "resolved" ? "selected" : ""}>Resolved</option>
-            </select>
-          </div>
-
-          <div>
-            <label for="issueEsn">ESN</label>
-            <input id="issueEsn" type="text" value="${escapeHtml(issue.esn)}" />
-          </div>
-
-          <div>
-            <label for="issueStation">Station</label>
-            <input id="issueStation" type="text" value="${escapeHtml(issue.station)}" />
-          </div>
-
-          <div class="full">
-            <label for="issueDescription">Description</label>
-            <textarea id="issueDescription">${escapeHtml(issue.description)}</textarea>
-          </div>
-        </div>
-
-        <div class="button-row">
-          <button class="primary-btn" onclick="updateIssue(${lineIndex}, ${issueIndex})">Save</button>
-          <button class="secondary-btn" onclick="closeModal()">Cancel</button>
-        </div>
-      `);
-    }
-
-    function updateIssue(lineIndex, issueIndex) {
-      const issue = state.lines[lineIndex].issues[issueIndex];
-      issue.title = document.getElementById("issueTitle").value.trim();
-      issue.esn = document.getElementById("issueEsn").value.trim();
-      issue.station = document.getElementById("issueStation").value.trim();
-      issue.description = document.getElementById("issueDescription").value.trim();
-      issue.status = document.getElementById("issueStatus").value;
-
-      if (!issue.title) {
-        alert("Issue title is required.");
-        return;
-      }
-
-      closeModal();
-      render();
-    }
-
-    function toggleIssueStatus(lineIndex, issueIndex) {
-      const issue = state.lines[lineIndex].issues[issueIndex];
-      issue.status = issue.status === "resolved" ? "current" : "resolved";
-      render();
-    }
-
-    function deleteIssue(lineIndex, issueIndex) {
-      if (!confirm("Delete this issue?")) return;
-
-      state.lines[lineIndex].issues.splice(issueIndex, 1);
-      render();
-    }
-
-    function addVisit(lineIndex, issueIndex) {
-      openModal(`
-        <h2>Add Meeting</h2>
-
-        <div class="form-grid">
-          <div>
-            <label for="visitDate">Date</label>
-            <input id="visitDate" type="text" placeholder="Date" />
-          </div>
-
-          <div>
-            <label for="visitPeople">People</label>
-            <input id="visitPeople" type="text" placeholder="People" />
-          </div>
-
-          <div>
-            <label for="visitLocation">Location</label>
-            <input id="visitLocation" type="text" placeholder="Location" />
-          </div>
-
-          <div>
-            <label for="visitType">Type</label>
-            <input id="visitType" type="text" placeholder="Example: Team Review" />
-          </div>
-
-          <div class="full">
-            <label for="visitNotes">Notes</label>
-            <textarea id="visitNotes" placeholder="Notes"></textarea>
-          </div>
-        </div>
-
-        <div class="button-row">
-          <button class="primary-btn" onclick="saveVisit(${lineIndex}, ${issueIndex})">Save</button>
-          <button class="secondary-btn" onclick="closeModal()">Cancel</button>
-        </div>
-      `);
-    }
-
-    function saveVisit(lineIndex, issueIndex) {
-      const date = document.getElementById("visitDate").value.trim();
-      const people = document.getElementById("visitPeople").value.trim();
-      const location = document.getElementById("visitLocation").value.trim();
-      const type = document.getElementById("visitType").value.trim();
-      const notes = document.getElementById("visitNotes").value.trim();
-
-      state.lines[lineIndex].issues[issueIndex].visits.push({
-        date,
-        people,
-        location,
-        type,
-        notes
-      });
-
-      closeModal();
-      render();
-    }
-
-    function viewIssue(lineIndex, issueIndex) {
-      const issue = state.lines[lineIndex].issues[issueIndex];
-      const visitsHtml = issue.visits.length
-        ? issue.visits.map((visit, index) => `
-            <div class="visit">
-              <div class="visit-header">
-                <strong>Meeting ${index + 1}</strong>
-                <span class="status-pill ${issue.status === "resolved" ? "resolved" : "current"}">${issue.status === "resolved" ? "Resolved" : "Current"}</span>
-              </div>
-
-              <div class="meta">
-                <div><strong>Date:</strong> ${escapeHtml(visit.date || "—")}</div>
-                <div><strong>People:</strong> ${escapeHtml(visit.people || "—")}</div>
-                <div><strong>Location:</strong> ${escapeHtml(visit.location || "—")}</div>
-                <div><strong>Type:</strong> ${escapeHtml(visit.type || "—")}</div>
-                <div><strong>Notes:</strong> ${escapeHtml(visit.notes || "No notes")}</div>
-              </div>
-
-              <div class="visit-actions">
-                <button class="mini-btn" onclick="editVisit(${lineIndex}, ${issueIndex}, ${index})">Edit</button>
-                <button class="danger-btn" onclick="deleteVisit(${lineIndex}, ${issueIndex}, ${index})">Delete</button>
-              </div>
-            </div>
-          `).join("")
-        : "<p>No meetings logged yet.</p>";
-
-      openModal(`
-        <h2>${escapeHtml(issue.title)}</h2>
-
-        <div class="meta">
-          <div><strong>Line:</strong> ${escapeHtml(state.lines[lineIndex].name)}</div>
-          <div><strong>ESN:</strong> ${escapeHtml(issue.esn || "—")}</div>
-          <div><strong>Station:</strong> ${escapeHtml(issue.station || "—")}</div>
-          <div><strong>Status:</strong> ${issue.status === "resolved" ? "Resolved" : "Current"}</div>
-          <div><strong>Description:</strong> ${escapeHtml(issue.description || "No description provided.")}</div>
-        </div>
-
-        <h3>Meetings</h3>
-        ${visitsHtml}
-
-        <div class="button-row">
-          <button class="primary-btn" onclick="addVisit(${lineIndex}, ${issueIndex})">+ Meeting</button>
-          <button class="secondary-btn" onclick="closeModal()">Close</button>
-        </div>
-      `);
-    }
-
-    function editVisit(lineIndex, issueIndex, visitIndex) {
-      const visit = state.lines[lineIndex].issues[issueIndex].visits[visitIndex];
-
-      openModal(`
-        <h2>Edit Meeting</h2>
-
-        <div class="form-grid">
-          <div>
-            <label for="visitDate">Date</label>
-            <input id="visitDate" type="text" value="${escapeHtml(visit.date)}" />
-          </div>
-
-          <div>
-            <label for="visitPeople">People</label>
-            <input id="visitPeople" type="text" value="${escapeHtml(visit.people)}" />
-          </div>
-
-          <div>
-            <label for="visitLocation">Location</label>
-            <input id="visitLocation" type="text" value="${escapeHtml(visit.location)}" />
-          </div>
-
-          <div>
-            <label for="visitType">Type</label>
-            <input id="visitType" type="text" value="${escapeHtml(visit.type)}" />
-          </div>
-
-          <div class="full">
-            <label for="visitNotes">Notes</label>
-            <textarea id="visitNotes">${escapeHtml(visit.notes)}</textarea>
-          </div>
-        </div>
-
-        <div class="button-row">
-          <button class="primary-btn" onclick="saveVisitEdit(${lineIndex}, ${issueIndex}, ${visitIndex})">Save</button>
-          <button class="secondary-btn" onclick="closeModal()">Cancel</button>
-        </div>
-      `);
-    }
-
-    function saveVisitEdit(lineIndex, issueIndex, visitIndex) {
-      const visit = state.lines[lineIndex].issues[issueIndex].visits[visitIndex];
-
-      visit.date = document.getElementById("visitDate").value.trim();
-      visit.people = document.getElementById("visitPeople").value.trim();
-      visit.location = document.getElementById("visitLocation").value.trim();
-      visit.type = document.getElementById("visitType").value.trim();
-      visit.notes = document.getElementById("visitNotes").value.trim();
-
-      closeModal();
-      render();
-    }
-
-    function deleteVisit(lineIndex, issueIndex, visitIndex) {
-      if (!confirm("Delete this meeting?")) return;
-
-      state.lines[lineIndex].issues[issueIndex].visits.splice(visitIndex, 1);
-      render();
-      closeModal();
-    }
-
-    function clearSearch() {
-      state.searchQuery = "";
-      document.getElementById("globalSearch").value = "";
-      renderSearchResults();
-    }
-
-    document.getElementById("globalSearch").addEventListener("input", function (e) {
-      state.searchQuery = e.target.value;
-      renderSearchResults();
-    });
-
-    document.querySelectorAll(".view-btn").forEach(btn => {
-      btn.addEventListener("click", function () {
-        setView(this.dataset.view);
-      });
-    });
-
-    loadData();
+    column.innerHTML = columnHeader;
+    column.appendChild(body);
+    board.appendChild(column);
+  });
+
+  document.getElementById('issueCount').innerText = getTotalCurrentIssues();
+  document.getElementById('resolvedCount').innerText = getTotalResolvedIssues();
+  document.getElementById('visitCount').innerText = getTotalVisits();
+  renderSearchResults();
+  saveData();
+}
+
+function openModal(html){
+  document.getElementById('modalContent').innerHTML = html;
+  document.getElementById('modal').style.display = 'block';
+}
+
+function closeModal(){
+  document.getElementById('modal').style.display = 'none';
+}
+
+function addIssue(lineIndex){
+  openModal(`
+    <h2>New Issue</h2>
+    <input id="title" placeholder="Title">
+    <input id="esn" placeholder="ESN">
+    <input id="station" placeholder="Station">
+    <input id="dateFound" type="date">
+    <textarea id="foundHow" placeholder="How issue was found"></textarea>
+    <textarea id="description" placeholder="Description"></textarea>
+    <button onclick="saveNewIssue(${lineIndex})">Save</button>
+    <button onclick="closeModal()">Cancel</button>
+  `);
+}
+
+function saveNewIssue(lineIndex){
+  lines[lineIndex].issues.push({
+    title:title.value,
+    esn:esn.value,
+    station:station.value,
+    dateFound:dateFound.value,
+    foundHow:foundHow.value,
+    description:description.value,
+    visits:[]
+  });
+  closeModal();
+  render();
+}
+
+function editIssue(lineIndex, issueIndex, view){
+  let issue = view === SOLVED_VIEW ? lines[lineIndex].resolvedIssues[issueIndex] : lines[lineIndex].issues[issueIndex];
+  openModal(`
+    <h2>Edit Issue</h2>
+    <input id="title" value="${issue.title}">
+    <input id="esn" value="${issue.esn}">
+    <input id="station" value="${issue.station}">
+    <input id="dateFound" type="date" value="${issue.dateFound || ''}">
+    <textarea id="foundHow">${issue.foundHow || ''}</textarea>
+    <textarea id="description">${issue.description}</textarea>
+    <button onclick="updateIssue(${lineIndex},${issueIndex}, '${view}')">Save</button>
+  `);
+}
+
+function updateIssue(lineIndex, issueIndex, view){
+  let issue = view === SOLVED_VIEW ? lines[lineIndex].resolvedIssues[issueIndex] : lines[lineIndex].issues[issueIndex];
+  issue.title = title.value;
+  issue.esn = esn.value;
+  issue.station = station.value;
+  issue.dateFound = dateFound.value;
+  issue.foundHow = foundHow.value;
+  issue.description = description.value;
+  closeModal();
+  render();
+}
+
+function deleteIssue(lineIndex, issueIndex, view){
+  if (confirm('Delete issue?')) {
+    if (view === SOLVED_VIEW) lines[lineIndex].resolvedIssues.splice(issueIndex, 1);
+    else lines[lineIndex].issues.splice(issueIndex, 1);
     render();
-  </script>
+  }
+}
+
+function addVisit(lineIndex, issueIndex, view){
+  openModal(`
+    <h2>Add Meeting</h2>
+    <input id="date" type="date">
+    <input id="people" placeholder="People">
+    <input id="location" placeholder="Location">
+    <textarea id="notes" placeholder="Notes"></textarea>
+    <button onclick="saveVisit(${lineIndex},${issueIndex}, '${view}')">Save</button>
+  `);
+}
+
+function saveVisit(lineIndex, issueIndex, view){
+  let issue = view === SOLVED_VIEW ? lines[lineIndex].resolvedIssues[issueIndex] : lines[lineIndex].issues[issueIndex];
+  if (!issue.visits) issue.visits = [];
+  issue.visits.push({
+    date:date.value,
+    people:people.value,
+    location:location.value,
+    notes:notes.value
+  });
+  closeModal();
+  render();
+}
+
+function viewIssue(lineIndex, issueIndex, view){
+  let issue = view === SOLVED_VIEW ? lines[lineIndex].resolvedIssues[issueIndex] : lines[lineIndex].issues[issueIndex];
+  let html = `
+    <h2>${issue.title}</h2>
+    <p><b>ESN:</b> ${issue.esn}</p>
+    <p><b>Station:</b> ${issue.station}</p>
+    <p><b>Date Found:</b> ${issue.dateFound || 'Not set'}</p>
+    <p><b>How issue was found:</b> ${issue.foundHow || 'Not set'}</p>
+    <p>${issue.description}</p>
+    <h3>Meetings</h3>
+  `;
+
+  if (issue.visits && issue.visits.length) {
+    issue.visits.forEach((visit,index) => {
+      html += `
+        <div class="visit">
+          <b>Meeting ${index + 1}</b><br><br>
+          Date: ${visit.date}<br>
+          People: ${visit.people}<br>
+          Location: ${visit.location}<br>
+          Notes: ${visit.notes}<br><br>
+          <button onclick="editVisit(${lineIndex}, ${issueIndex}, ${index}, '${view}')">Edit</button>
+          <button onclick="deleteVisit(${lineIndex}, ${issueIndex}, ${index}, '${view}')">Delete</button>
+        </div>
+      `;
+    });
+  }
+
+  html += '<br><button onclick="closeModal()">Close</button>';
+  openModal(html);
+}
+
+function moveIssueToSolved(lineIndex, issueIndex){
+  const issue = lines[lineIndex].issues.splice(issueIndex, 1)[0];
+  if (!issue) return;
+  issue.resolvedDate = new Date().toLocaleString();
+  lines[lineIndex].resolvedIssues.push(issue);
+  render();
+}
+
+function moveIssueToCurrent(lineIndex, issueIndex){
+  const issue = lines[lineIndex].resolvedIssues.splice(issueIndex, 1)[0];
+  if (!issue) return;
+  lines[lineIndex].issues.push(issue);
+  render();
+}
+
+function editVisit(lineIndex, issueIndex, visitIndex, view){
+  let issue = view === SOLVED_VIEW ? lines[lineIndex].resolvedIssues[issueIndex] : lines[lineIndex].issues[issueIndex];
+  let visit = issue.visits[visitIndex];
+  openModal(`
+    <h2>Edit Meeting</h2>
+    <input id="date" type="date" value="${visit.date}">
+    <input id="people" value="${visit.people}">
+    <input id="location" value="${visit.location}">
+    <textarea id="notes">${visit.notes}</textarea>
+    <button onclick="saveVisitEdit(${lineIndex}, ${issueIndex}, ${visitIndex}, '${view}')">Save</button>
+  `);
+}
+
+function saveVisitEdit(lineIndex, issueIndex, visitIndex, view){
+  let issue = view === SOLVED_VIEW ? lines[lineIndex].resolvedIssues[issueIndex] : lines[lineIndex].issues[issueIndex];
+  let visit = issue.visits[visitIndex];
+  visit.date = date.value;
+  visit.people = people.value;
+  visit.location = location.value;
+  visit.notes = notes.value;
+  closeModal();
+  render();
+}
+
+function deleteVisit(lineIndex, issueIndex, visitIndex, view){
+  let issue = view === SOLVED_VIEW ? lines[lineIndex].resolvedIssues[issueIndex] : lines[lineIndex].issues[issueIndex];
+  issue.visits.splice(visitIndex, 1);
+  render();
+}
+
+render();
+</script>
+
 </body>
 </html>
-
-
