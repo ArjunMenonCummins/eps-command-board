@@ -1,0 +1,40 @@
+{
+  "lastSync": "2026-10-05T16:08:32.820Z",
+  "lines": [
+    {
+      "name": "19L",
+      "color": "red",
+      "issues": [
+        {
+          "title": "",
+          "esn": "",
+          "station": "",
+          "dateFound": "",
+          "foundHow": "",
+          "description": "",
+          "visits": [],
+          "flagged": false
+        }
+      ],
+      "resolvedIssues": []
+    },
+    {
+      "name": "30L",
+      "color": "orange",
+      "issues": [],
+      "resolvedIssues": []
+    },
+    {
+      "name": "95L",
+      "color": "yellow",
+      "issues": [],
+      "resolvedIssues": []
+    },
+    {
+      "name": "15L",
+      "color": "green",
+      "issues": [],
+      "resolvedIssues": []
+    }
+  ]
+}
