@@ -53,21 +53,6 @@ h1{
  font-weight:800;
 }
 
-.token-status{
- font-size:12px;
- padding:6px 12px;
- border-radius:4px;
- background:#e8f5e9;
- color:#2e7d32;
- border:1px solid #4caf50;
-}
-
-.token-status.none{
- background:#ffebee;
- color:#c62828;
- border-color:#f44336;
-}
-
 .stats{
  display:flex;
  gap:12px;
@@ -346,7 +331,6 @@ h1{
 .card-button.blue{ background:#2d6cdf; color:white; border-color:#2d6cdf; }
 .card-button.flag{ background:#ff6b6b; color:white; border-color:#ff6b6b; }
 .card-button.flag.flagged{ background:#ffb3b3; }
-.card-button.photo{ background:#FF9800; color:white; border-color:#FF9800; }
 
 .modal{
  display:none;
@@ -379,57 +363,6 @@ input,textarea{
  background:#f7f7f7;
  padding:10px;
  border-left:4px solid var(--red);
- border-radius: 4px;
-}
-
-.photo-gallery{
- margin-top:10px;
- display:grid;
- grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
- gap:8px;
-}
-
-.photo-thumb{
- width:100%;
- height:100px;
- object-fit:cover;
- border-radius:4px;
- cursor:pointer;
- border:1px solid #ddd;
-}
-
-.photo-upload{
- margin-top:8px;
- padding:8px;
- background:#f0f0f0;
- border-radius:4px;
-}
-
-.photo-upload input[type="file"]{
- padding:4px;
- font-size:12px;
-}
-
-.upload-status{
- font-size:12px;
- margin-top:5px;
- padding:5px 8px;
- border-radius:4px;
-}
-
-.upload-status.success{
- background:#d4edda;
- color:#155724;
-}
-
-.upload-status.error{
- background:#f8d7da;
- color:#721c24;
-}
-
-.upload-status.loading{
- background:#d1ecf1;
- color:#0c5460;
 }
 
 .empty-state{
@@ -465,7 +398,6 @@ input,textarea{
 <div class="header">
   <div class="header-top">
     <h1>EPS COMMAND BOARD</h1>
-    <div class="token-status" id="tokenStatus">🔒 No GitHub Token</div>
   </div>
 
   <div class="stats">
@@ -480,7 +412,6 @@ input,textarea{
     <div class="search-actions">
       <button onclick="runSearch()">Search</button>
       <button onclick="clearSearch()">Clear</button>
-      <button onclick="setupGitHubToken()" style="background:#ff6b6b;">Setup GitHub</button>
     </div>
   </div>
 
@@ -504,16 +435,12 @@ input,textarea{
 const CURRENT_VIEW = "current";
 const SOLVED_VIEW = "solved";
 const ALL_VIEW = "all";
-const GITHUB_REPO_OWNER = "ArjunMenonCummins";
-const GITHUB_REPO_NAME = "eps-command-board";
-const GITHUB_BRANCH = "main";
 
-let activeFilter = sessionStorage.getItem("epsActiveFilter") || ALL_VIEW;
-let activeLine = sessionStorage.getItem("epsActiveLine") || null;
+let activeFilter = localStorage.getItem("epsActiveFilter") || ALL_VIEW;
+let activeLine = localStorage.getItem("epsActiveLine") || null;
 let searchResults = [];
-let githubToken = sessionStorage.getItem("githubToken") || null;
 
-let lines = JSON.parse(sessionStorage.getItem("epsLines")) || [
+let lines = JSON.parse(localStorage.getItem("epsLines")) || [
   { name:"19L", color:"red", issues:[], resolvedIssues:[] },
   { name:"30L", color:"orange", issues:[], resolvedIssues:[] },
   { name:"95L", color:"yellow", issues:[], resolvedIssues:[] },
@@ -531,151 +458,12 @@ function normalizeLines(){
 
 normalizeLines();
 
-function setupGitHubToken(){
-  const token = prompt("Paste your GitHub Personal Access Token (ghp_...):");
-  if (token && token.startsWith("ghp_")) {
-    sessionStorage.setItem("githubToken", token);
-    githubToken = token;
-    updateTokenStatus();
-    alert("✅ GitHub token saved! Photos will upload to your repo.");
-  } else if (token) {
-    alert("❌ Invalid token format. Must start with 'ghp_'");
-  }
-}
-
-function updateTokenStatus(){
-  const statusEl = document.getElementById("tokenStatus");
-  if (githubToken) {
-    statusEl.textContent = "✅ GitHub Connected";
-    statusEl.className = "token-status";
-  } else {
-    statusEl.textContent = "🔒 No GitHub Token";
-    statusEl.className = "token-status none";
-  }
-}
-
 function saveData(){
-  sessionStorage.setItem("epsLines", JSON.stringify(lines));
-  sessionStorage.setItem("epsActiveFilter", activeFilter);
-  sessionStorage.setItem("epsActiveLine", activeLine || "");
-  
-  if (githubToken) {
-    syncToGitHub();
-  }
-}
-
-async function syncToGitHub(){
-  try {
-    const metadata = {
-      lastSync: new Date().toISOString(),
-      lines: lines
-    };
-    
-    await uploadToGitHub(
-      `data/metadata.json`,
-      JSON.stringify(metadata, null, 2)
-    );
-  } catch (error) {
-    console.error("GitHub sync error:", error);
-  }
-}
-
-async function uploadToGitHub(filePath, content){
-  if (!githubToken) return;
-  
-  try {
-    const url = `https://api.github.com/repos/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}/contents/${filePath}`;
-    
-    const response = await fetch(url, {
-      headers: {
-        "Authorization": `token ${githubToken}`,
-        "Content-Type": "application/json"
-      }
-    });
-    
-    let sha = null;
-    if (response.ok) {
-      const data = await response.json();
-      sha = data.sha;
-    }
-    
-    const uploadData = {
-      message: `Update ${filePath}`,
-      content: btoa(content),
-      branch: GITHUB_BRANCH
-    };
-    
-    if (sha) uploadData.sha = sha;
-    
-    await fetch(url, {
-      method: "PUT",
-      headers: {
-        "Authorization": `token ${githubToken}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(uploadData)
-    });
-  } catch (error) {
-    console.error("Upload error:", error);
-  }
-}
-
-async function uploadPhotoToGitHub(lineIndex, issueIndex, meetingIndex, file){
-  if (!githubToken || !file) return null;
-  
-  try {
-    const line = lines[lineIndex];
-    const issue = line.issues[issueIndex] || line.resolvedIssues[issueIndex];
-    
-    const fileName = `${line.name}-${issue.esn}-M${meetingIndex+1}-${Date.now()}-${file.name}`;
-    const filePath = `data/photos/${fileName}`;
-    
-    const reader = new FileReader();
-    
-    return new Promise((resolve, reject) => {
-      reader.onload = async () => {
-        try {
-          const base64 = reader.result.split(',')[1];
-          
-          const url = `https://api.github.com/repos/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}/contents/${filePath}`;
-          
-          const uploadData = {
-            message: `Add photo: ${fileName}`,
-            content: base64,
-            branch: GITHUB_BRANCH
-          };
-          
-          const response = await fetch(url, {
-            method: "PUT",
-            headers: {
-              "Authorization": `token ${githubToken}`,
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify(uploadData)
-          });
-          
-          if (response.ok) {
-            const data = await response.json();
-            resolve({
-              name: fileName,
-              path: filePath,
-              url: `https://raw.githubusercontent.com/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}/${GITHUB_BRANCH}/${filePath}`
-            });
-          } else {
-            reject(new Error("Upload failed"));
-          }
-        } catch (error) {
-          reject(error);
-        }
-      };
-      
-      reader.onerror = () => reject(new Error("File read error"));
-      reader.readAsDataURL(file);
-    });
-  } catch (error) {
-    console.error("Photo upload error:", error);
-    return null;
-  }
+  localStorage.setItem("epsLines", JSON.stringify(lines));
+  localStorage.setItem("epsActiveFilter", activeFilter);
+  localStorage.setItem("epsActiveLine", activeLine || "");
+  const flattenedResolved = lines.flatMap(line => line.resolvedIssues.map(issue => ({ ...issue, line: line.name })));
+  localStorage.setItem("epsResolvedIssues", JSON.stringify(flattenedResolved));
 }
 
 function buildSearchableText(issue){
@@ -853,13 +641,13 @@ function render(){
           meetingsHtml = '<div class="meetings">';
           recentMeetings.forEach((visit, idx) => {
             const actualIndex = issue.visits.indexOf(visit);
-            const photoCount = visit.photos ? visit.photos.length : 0;
             meetingsHtml += `
               <div class="meeting-item">
-                <div class="meeting-label">Meeting ${actualIndex + 1} ${photoCount > 0 ? `📸 (${photoCount})` : ''}</div>
+                <div class="meeting-label">Meeting ${actualIndex + 1}</div>
                 <div class="meeting-detail"><b>Date:</b> ${visit.date}</div>
                 <div class="meeting-detail"><b>People:</b> ${visit.people}</div>
                 <div class="meeting-detail"><b>Location:</b> ${visit.location}</div>
+                <div class="meeting-detail"><b>Notes:</b> ${visit.notes}</div>
               </div>
             `;
           });
@@ -933,12 +721,12 @@ function addIssue(lineIndex){
 
 function saveNewIssue(lineIndex){
   lines[lineIndex].issues.push({
-    title:document.getElementById('title').value,
-    esn:document.getElementById('esn').value,
-    station:document.getElementById('station').value,
-    dateFound:document.getElementById('dateFound').value,
-    foundHow:document.getElementById('foundHow').value,
-    description:document.getElementById('description').value,
+    title:title.value,
+    esn:esn.value,
+    station:station.value,
+    dateFound:dateFound.value,
+    foundHow:foundHow.value,
+    description:description.value,
     visits:[],
     flagged:false
   });
@@ -962,12 +750,12 @@ function editIssue(lineIndex, issueIndex, view){
 
 function updateIssue(lineIndex, issueIndex, view){
   let issue = view === SOLVED_VIEW ? lines[lineIndex].resolvedIssues[issueIndex] : lines[lineIndex].issues[issueIndex];
-  issue.title = document.getElementById('title').value;
-  issue.esn = document.getElementById('esn').value;
-  issue.station = document.getElementById('station').value;
-  issue.dateFound = document.getElementById('dateFound').value;
-  issue.foundHow = document.getElementById('foundHow').value;
-  issue.description = document.getElementById('description').value;
+  issue.title = title.value;
+  issue.esn = esn.value;
+  issue.station = station.value;
+  issue.dateFound = dateFound.value;
+  issue.foundHow = foundHow.value;
+  issue.description = description.value;
   closeModal();
   render();
 }
@@ -995,11 +783,10 @@ function saveVisit(lineIndex, issueIndex, view){
   let issue = view === SOLVED_VIEW ? lines[lineIndex].resolvedIssues[issueIndex] : lines[lineIndex].issues[issueIndex];
   if (!issue.visits) issue.visits = [];
   issue.visits.push({
-    date:document.getElementById('date').value,
-    people:document.getElementById('people').value,
-    location:document.getElementById('location').value,
-    notes:document.getElementById('notes').value,
-    photos:[]
+    date:date.value,
+    people:people.value,
+    location:location.value,
+    notes:notes.value
   });
   closeModal();
   render();
@@ -1019,86 +806,22 @@ function viewIssue(lineIndex, issueIndex, view){
 
   if (issue.visits && issue.visits.length) {
     issue.visits.forEach((visit,index) => {
-      const photoCount = visit.photos ? visit.photos.length : 0;
       html += `
         <div class="visit">
-          <b>Meeting ${index + 1}</b> ${photoCount > 0 ? `📸 ${photoCount} photos` : ''}<br><br>
+          <b>Meeting ${index + 1}</b><br><br>
           Date: ${visit.date}<br>
           People: ${visit.people}<br>
           Location: ${visit.location}<br>
-          Notes: ${visit.notes}<br>
-      `;
-      
-      if (visit.photos && visit.photos.length > 0) {
-        html += `<div class="photo-gallery">`;
-        visit.photos.forEach(photo => {
-          html += `<img src="${photo.url}" alt="photo" class="photo-thumb" onclick="window.open('${photo.url}')">`;
-        });
-        html += `</div>`;
-      }
-      
-      html += `
-          <div class="photo-upload">
-            <label style="font-weight:bold; display:block; margin-bottom:5px;">📸 Attach Photos:</label>
-            <input type="file" accept="image/*" multiple onchange="handlePhotoUpload(${lineIndex}, ${issueIndex}, ${index}, '${view}', event)">
-            <div id="upload-status-${index}"></div>
-          </div>
-          <div style="margin-top:10px; gap:6px; display:flex; flex-wrap:wrap;">
-            <button class="card-button" onclick="editVisit(${lineIndex}, ${issueIndex}, ${index}, '${view}')">Edit Meeting</button>
-            <button class="card-button" style="background:#dc3545; border-color:#dc3545;" onclick="deleteVisit(${lineIndex}, ${issueIndex}, ${index}, '${view}')">Delete Meeting</button>
-          </div>
+          Notes: ${visit.notes}<br><br>
+          <button onclick="editVisit(${lineIndex}, ${issueIndex}, ${index}, '${view}')">Edit</button>
+          <button onclick="deleteVisit(${lineIndex}, ${issueIndex}, ${index}, '${view}')">Delete</button>
         </div>
       `;
     });
   }
 
-  html += '<br><button class="card-button green" onclick="closeModal()" style="width:auto;">Close</button>';
+  html += '<br><button onclick="closeModal()">Close</button>';
   openModal(html);
-}
-
-async function handlePhotoUpload(lineIndex, issueIndex, meetingIndex, view, event){
-  const files = event.target.files;
-  if (!files || files.length === 0) return;
-  
-  if (!githubToken) {
-    alert("⚠️  Please setup GitHub token first (Setup GitHub button in top right)");
-    return;
-  }
-  
-  const issue = view === SOLVED_VIEW ? lines[lineIndex].resolvedIssues[issueIndex] : lines[lineIndex].issues[issueIndex];
-  const visit = issue.visits[meetingIndex];
-  
-  const statusEl = document.getElementById(`upload-status-${meetingIndex}`);
-  
-  for (let file of files) {
-    const fileStatus = document.createElement('div');
-    fileStatus.className = 'upload-status loading';
-    fileStatus.textContent = `⏳ Uploading ${file.name}...`;
-    statusEl.appendChild(fileStatus);
-    
-    try {
-      const photoData = await uploadPhotoToGitHub(lineIndex, issueIndex, meetingIndex, file);
-      
-      if (photoData) {
-        if (!visit.photos) visit.photos = [];
-        visit.photos.push({
-          name: photoData.name,
-          url: photoData.url,
-          uploadedAt: new Date().toISOString()
-        });
-        
-        fileStatus.className = 'upload-status success';
-        fileStatus.textContent = `✅ ${file.name} uploaded!`;
-        
-        render();
-      } else {
-        throw new Error("Upload failed");
-      }
-    } catch (error) {
-      fileStatus.className = 'upload-status error';
-      fileStatus.textContent = `❌ ${file.name} failed: ${error.message}`;
-    }
-  }
 }
 
 function moveIssueToSolved(lineIndex, issueIndex){
@@ -1133,10 +856,10 @@ function editVisit(lineIndex, issueIndex, visitIndex, view){
 function saveVisitEdit(lineIndex, issueIndex, visitIndex, view){
   let issue = view === SOLVED_VIEW ? lines[lineIndex].resolvedIssues[issueIndex] : lines[lineIndex].issues[issueIndex];
   let visit = issue.visits[visitIndex];
-  visit.date = document.getElementById('date').value;
-  visit.people = document.getElementById('people').value;
-  visit.location = document.getElementById('location').value;
-  visit.notes = document.getElementById('notes').value;
+  visit.date = date.value;
+  visit.people = people.value;
+  visit.location = location.location;
+  visit.notes = notes.value;
   closeModal();
   render();
 }
@@ -1147,7 +870,6 @@ function deleteVisit(lineIndex, issueIndex, visitIndex, view){
   render();
 }
 
-updateTokenStatus();
 render();
 </script>
 
